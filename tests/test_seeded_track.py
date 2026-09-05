@@ -181,7 +181,9 @@ def test_fast_path_skips_full_solve(monkeypatch: pytest.MonkeyPatch) -> None:
         return real(*a, **k)
 
     monkeypatch.setattr(art, "_solver_solve", _spy)
-    fast = art.solve(T, q_seed=seed, max_solutions=1, respect_limits=False)
+    # native=False: this spies on the Python fast-path dispatch (_solver_solve); the
+    # native backend implements the seeded fast path in C++ and never calls it.
+    fast = art.solve(T, q_seed=seed, max_solutions=1, respect_limits=False, native=False)
     assert fast
     assert calls["n"] == 0, "full solve was called despite a clean seed continuation"
 
@@ -204,7 +206,9 @@ def test_fast_path_falls_through_when_seed_cannot_continue(
         return real(*a, **k)
 
     monkeypatch.setattr(art, "_solver_solve", _spy)
-    result = art.solve(T, q_seed=seed, max_solutions=1, respect_limits=False)
+    # native=False: spies on the Python fast-path dispatch (_solver_solve); native
+    # implements the seeded fast path in C++ and never calls it.
+    result = art.solve(T, q_seed=seed, max_solutions=1, respect_limits=False, native=False)
     assert result, "fall-through must still return a solution"
     assert calls["n"] >= 1, "expected fall-through to the full solve"
     assert float(np.max(np.abs(art.fk(result[0].q) - T))) < 1e-9

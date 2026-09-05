@@ -543,7 +543,7 @@ def solve(
     refinement_max_iters: int = 15,
     seed_metric: str = "wrap_linf",
     seed_tolerance: float | None = None,
-    native: bool = False,
+    native: bool = True,
 ):
     """Inverse kinematics. Returns ``list[Solution]``.
 
@@ -593,12 +593,15 @@ def solve(
         Rarely customised.
     :param refinement_max_iters: cap on Newton iterations per
         candidate when ``allow_refinement=True``.
-    :param native: opt into the shipped native (C++) backend for this
-        arm's solver family (~50x faster). Returns the same solution
-        *set*; the *order* without a seed and the near-singular
-        *representative* may differ (numpy vs Eigen). Silently falls back
-        to the Python path when the native extension isn't available
-        (Windows / source installs). Default ``False``.
+    :param native: use the shipped native (C++) backend for this arm's
+        solver family (the default; typically 2-100x faster). Returns the
+        same solution *set*; the *order* without a seed and the
+        near-singular *representative* may differ (numpy vs Eigen), and
+        redundant-7R arms may sample the self-motion manifold differently.
+        Silently falls back to the Python path when the native extension
+        isn't bundled (Windows / source installs). Pass ``native=False``
+        for the pure-Python path (identical algorithm, no C++ dependency).
+        Default ``True``.
     :returns: list of :class:`Solution`; empty list iff no IK
         closed within ``policy.subproblem_numerical`` (or all
         IKs were filtered by ``respect_limits=True``).

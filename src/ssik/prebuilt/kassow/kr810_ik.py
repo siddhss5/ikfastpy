@@ -835,7 +835,7 @@ def solve(
     refinement_max_iters: int = 15,
     seed_metric: str = "wrap_linf",
     seed_tolerance: float | None = None,
-    native: bool = False,
+    native: bool = True,
 ):
     """Inverse kinematics. Returns ``list[Solution]``.
 

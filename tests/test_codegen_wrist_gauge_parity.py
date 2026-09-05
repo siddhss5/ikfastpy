@@ -140,7 +140,19 @@ def test_emitted_artifact_matches_live_under_flange_gauge(
     for _ in range(n):
         q = rng.uniform(-1.2, 1.2, size=6)
         t_target = poe_forward_kinematics(kb, q)
-        sols = art.solve(t_target, respect_limits=False)  # type: ignore[attr-defined]
+        # native=False (only where the artifact exposes it -- non-native solver
+        # families like ikgeo.spherical / spherical_two_intersecting have no such
+        # kwarg): this asserts the emitted codegen correctly bakes the wrist gauge
+        # (canonicalize_spherical_wrist) on the Python path; native FK-closure + set
+        # parity are gated separately in tests/test_native_dispatch.py.
+        import inspect
+
+        _no_native = (
+            {"native": False}
+            if "native" in inspect.signature(art.solve).parameters  # type: ignore[attr-defined]
+            else {}
+        )
+        sols = art.solve(t_target, respect_limits=False, **_no_native)  # type: ignore[attr-defined]
         if sols:
             covered += 1
             worst_fk = max(worst_fk, max(float(s.fk_residual) for s in sols))
