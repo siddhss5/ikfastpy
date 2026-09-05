@@ -683,7 +683,22 @@ sols = ur5_ik.solve(T_target, native=False)                  # identical algorit
 
 - **Same answers.** Native reproduces the Python result's solution *set*. Without a seed the *order* and the near-singular *representative* may differ (numpy vs Eigen), and redundant-7R arms may sample the self-motion manifold differently; with a seed the nearest solution is stable. Parity is gated in CI against the Python `solve()` across every arm and option (limits / seed / max / tolerance).
 - **Automatic fallback.** Where the native extension isn't bundled (Windows wheels, source installs), `solve()` transparently runs the identical pure-Python path — it never fails for unavailability. Pass `native=False` to force it explicitly (e.g. for bit-reproducible results across machines).
-- **Self-contained C++ artifacts.** The same solvers are emitted as zero-runtime-Python `cpp/gen/<arm>.hpp` headers for direct MoveIt/C++ use.
+### Using ssik from C++ (no Python)
+
+The same solvers are also emitted as **zero-runtime-Python, header-only** artifacts — `cpp/gen/<arm>_ik.hpp` — for MoveIt / real-time / any-C++ use where the Python library isn't an option. Each header bakes one robot's geometry and exposes `solve(T)` returning every IK branch, depending only on Eigen:
+
+```cpp
+#include "iiwa14_ik.hpp"
+namespace arm = ssik::iiwa14_ik;
+auto sols = arm::solve(T);          // std::vector<ssik::Solution<arm::DOF>>, all in-limits IK
+```
+
+```cmake
+find_package(ssik_cpp REQUIRED)
+target_link_libraries(my_app PRIVATE ssik::ssik_cpp)   # every <arm>_ik.hpp on the include path
+```
+
+Full guide (install/`find_package`, the bare-`c++` path, the `Solution`/`ArtifactParams` types, `solve_batch`, generating any arm): **[`cpp/README.md`](cpp/README.md)**. Runnable examples: [`cpp/examples/solve_arm.cpp`](cpp/examples/solve_arm.cpp) and the standalone downstream project [`cpp/examples/consumer/`](cpp/examples/consumer/) (built in CI). A MoveIt `KinematicsBase` plugin generator is tracked in [#493](https://github.com/personalrobotics/ssik/issues/493).
 
 Out of scope: collision filtering (use FCL or similar at the application layer) and continuous-trajectory smoothness (typically a separate planner concern).
 
