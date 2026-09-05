@@ -125,7 +125,17 @@ def test_artifact_matches_live_solver(arm: str) -> None:
         # Pure analytical set from both paths: no rescue, no limit filtering, and
         # refinement ON for both so the artifact's baked force-refine (#362) is
         # matched by the live solver (which otherwise honours allow_refinement).
-        kw = {"respect_limits": False, "allow_rescue": False, "allow_refinement": True}
+        # native=False: this asserts codegen<->live *algorithm* equivalence (a
+        # Python-level property); native<->Python parity is gated separately in
+        # tests/test_native_dispatch.py, and redundant-7R native legitimately
+        # samples the manifold differently (the #554 relative-completeness
+        # contract), which is not what this test is about.
+        kw = {
+            "respect_limits": False,
+            "allow_rescue": False,
+            "allow_refinement": True,
+            "native": False,
+        }
         art_sols = art.solve(t, **kw)
         if not art_sols:
             continue

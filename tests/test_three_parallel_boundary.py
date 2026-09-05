@@ -35,7 +35,6 @@ from typing import Any
 import numpy as np
 import pytest
 
-from ssik._native import _NATIVE_SOLVERS
 from ssik.kinematics.poe_fk import poe_forward_kinematics
 from ssik.prebuilt._manifest import load_manifest
 
@@ -120,7 +119,14 @@ def test_unreachable_returns_empty_is_ls(target_name: str, three_parallel_backen
     assert is_ls, f"{target_name}: expected is_ls=True for unreachable target"
 
 
-_FAMILY_ARMS = [a.name for a in load_manifest().values() if a.solver in _NATIVE_SOLVERS]
+# Rescue is dormant only for the COMPLETE geometric families (three_parallel,
+# spherical_two_parallel): their analytical path covers every reachable pose, so
+# allow_rescue changes nothing. The RR / HP / redundant-7R families in
+# _NATIVE_SOLVERS use rescue as a load-bearing completeness backstop (it fires by
+# design on the measure-zero ridges), so this dormancy invariant does not apply to
+# them -- restrict to the geometric families.
+_GEOMETRIC_NATIVE_SOLVERS = frozenset({"ikgeo.three_parallel", "ikgeo.spherical_two_parallel"})
+_FAMILY_ARMS = [a.name for a in load_manifest().values() if a.solver in _GEOMETRIC_NATIVE_SOLVERS]
 
 
 @pytest.mark.parametrize("arm_name", _FAMILY_ARMS)

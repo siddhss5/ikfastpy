@@ -139,7 +139,12 @@ class CythonBuildHook(BuildHookInterface):  # type: ignore[type-arg]
                                 eigen,
                             ],
                             language="c++",
-                            extra_compile_args=["-std=c++20", "-O2"],
+                            # -DNDEBUG: release build -- disable assert()/eigen_assert.
+                            # The solvers feed Eigen degenerate matrices (rescue
+                            # jitters, near-singular poses) by design and reject the
+                            # garbage via FK-certification; an active eigen_assert
+                            # would abort() the shipped wheel on those poses.
+                            extra_compile_args=["-std=c++20", "-O2", "-DNDEBUG"],
                             # parallel.hpp (rescue / jointlock sweep, #546) uses
                             # std::thread -> link pthread on Linux (macOS libSystem
                             # already has it; this block only runs on Linux/macOS).

@@ -76,21 +76,20 @@ fk_ceiling_fuzz = 1e-7
 platform_drift = false
 
 [arms.ur5_ik.bench]
-ms_mean = 1.77
-ms_ci95 = 0.13
-max_fk = 6.3e-12
+ms_mean = 0.02
+ms_ci95 = 0.00
+max_fk = 1.2e-08
 sols_min = 2
 sols_max = 8
 
 [arms.ur5_ik.eaik]
 supported = true
 family = "6R-THREE_INNER_PARALLEL"
-ms_mean = 0.00425628
-ms_ci95 = 0.00031069
+ms_mean = 0.0039086
+ms_ci95 = 7.06041e-05
 max_fk = 1.6e-15
 sols_min = 2
 sols_max = 8
-
 [arms.ur3e_ik]
 display_name = "Universal Robots UR3e"
 short_name = "UR3e"
@@ -115,21 +114,20 @@ fk_ceiling_fuzz = 1e-7
 platform_drift = false
 
 [arms.ur3e_ik.bench]
-ms_mean = 2.03
-ms_ci95 = 0.11
-max_fk = 1.4e-08
+ms_mean = 0.02
+ms_ci95 = 0.00
+max_fk = 1.2e-08
 sols_min = 2
 sols_max = 8
 
 [arms.ur3e_ik.eaik]
 supported = true
 family = "6R-THREE_INNER_PARALLEL"
-ms_mean = 0.00409399
-ms_ci95 = 0.000413332
+ms_mean = 0.0040094
+ms_ci95 = 0.000108151
 max_fk = 1.4e-15
 sols_min = 2
 sols_max = 6
-
 [arms.ur5e_ik]
 display_name = "Universal Robots UR5e"
 short_name = "UR5e"
@@ -154,21 +152,20 @@ fk_ceiling_fuzz = 1e-7
 platform_drift = false
 
 [arms.ur5e_ik.bench]
-ms_mean = 1.85
-ms_ci95 = 0.13
-max_fk = 2e-09
+ms_mean = 0.02
+ms_ci95 = 0.00
+max_fk = 1.2e-08
 sols_min = 2
 sols_max = 8
 
 [arms.ur5e_ik.eaik]
 supported = true
 family = "6R-THREE_INNER_PARALLEL"
-ms_mean = 0.00412479
-ms_ci95 = 0.000527687
+ms_mean = 0.00425253
+ms_ci95 = 0.000172572
 max_fk = 1.4e-15
 sols_min = 4
 sols_max = 8
-
 [arms.ur10e_ik]
 display_name = "Universal Robots UR10e"
 short_name = "UR10e"
@@ -193,21 +190,20 @@ fk_ceiling_fuzz = 1e-7
 platform_drift = false
 
 [arms.ur10e_ik.bench]
-ms_mean = 1.74
-ms_ci95 = 0.13
-max_fk = 2e-09
+ms_mean = 0.02
+ms_ci95 = 0.00
+max_fk = 1.2e-08
 sols_min = 2
 sols_max = 8
 
 [arms.ur10e_ik.eaik]
 supported = true
 family = "6R-THREE_INNER_PARALLEL"
-ms_mean = 0.00380271
-ms_ci95 = 4.07953e-05
+ms_mean = 0.00391502
+ms_ci95 = 4.31245e-05
 max_fk = 1.4e-15
 sols_min = 2
 sols_max = 8
-
 [arms.ur16e_ik]
 display_name = "Universal Robots UR16e"
 short_name = "UR16e"
@@ -232,21 +228,20 @@ fk_ceiling_fuzz = 1e-7
 platform_drift = false
 
 [arms.ur16e_ik.bench]
-ms_mean = 1.89
-ms_ci95 = 0.13
-max_fk = 1.4e-08
+ms_mean = 0.02
+ms_ci95 = 0.00
+max_fk = 1.2e-08
 sols_min = 2
 sols_max = 8
 
 [arms.ur16e_ik.eaik]
 supported = true
 family = "6R-THREE_INNER_PARALLEL"
-ms_mean = 0.00404688
-ms_ci95 = 0.000112286
+ms_mean = 0.00418254
+ms_ci95 = 0.000135876
 max_fk = 1.3e-15
 sols_min = 4
 sols_max = 8
-
 [arms.ur20_ik]
 display_name = "Universal Robots UR20"
 short_name = "UR20"
@@ -271,21 +266,20 @@ fk_ceiling_fuzz = 1e-7
 platform_drift = false
 
 [arms.ur20_ik.bench]
-ms_mean = 1.8
-ms_ci95 = 0.13
-max_fk = 1.4e-08
+ms_mean = 0.02
+ms_ci95 = 0.00
+max_fk = 1.2e-08
 sols_min = 2
 sols_max = 8
 
 [arms.ur20_ik.eaik]
 supported = true
 family = "6R-THREE_INNER_PARALLEL"
-ms_mean = 0.00380187
-ms_ci95 = 4.48338e-05
+ms_mean = 0.00390372
+ms_ci95 = 4.35361e-05
 max_fk = 1.4e-15
 sols_min = 4
 sols_max = 8
-
 [arms.ur30_ik]
 display_name = "Universal Robots UR30"
 short_name = "UR30"
@@ -310,21 +304,20 @@ fk_ceiling_fuzz = 1e-7
 platform_drift = false
 
 [arms.ur30_ik.bench]
-ms_mean = 1.93
-ms_ci95 = 0.13
-max_fk = 2e-09
+ms_mean = 0.02
+ms_ci95 = 0.00
+max_fk = 1.2e-08
 sols_min = 2
 sols_max = 8
 
 [arms.ur30_ik.eaik]
 supported = true
 family = "6R-THREE_INNER_PARALLEL"
-ms_mean = 0.00369166
-ms_ci95 = 4.25578e-05
+ms_mean = 0.00395639
+ms_ci95 = 9.46045e-05
 max_fk = 1.6e-15
 sols_min = 2
 sols_max = 8
-
 [arms.puma560_ik]
 display_name = "KUKA Puma 560"
 short_name = "Puma 560"
@@ -348,21 +341,20 @@ fk_ceiling_fuzz = 1e-12
 platform_drift = false
 
 [arms.puma560_ik.bench]
-ms_mean = 0.22
-ms_ci95 = 0.0
-max_fk = 8.3e-12
+ms_mean = 0.01
+ms_ci95 = 0.00
+max_fk = 8.9e-09
 sols_min = 8
 sols_max = 8
 
 [arms.puma560_ik.eaik]
 supported = true
 family = "6R-SPHERICAL_SECOND_TWO_PARALLEL"
-ms_mean = 0.00393604
-ms_ci95 = 9.73211e-05
+ms_mean = 0.00379313
+ms_ci95 = 6.88151e-05
 max_fk = 8.3e-12
 sols_min = 8
 sols_max = 8
-
 [arms.jaco2_ik]
 display_name = "Kinova JACO 2 (j2n6s200)"
 short_name = "JACO 2"
@@ -393,16 +385,15 @@ drift_markers = [
 ]
 
 [arms.jaco2_ik.bench]
-ms_mean = 0.87
-ms_ci95 = 0.02
-max_fk = 8e-07
+ms_mean = 0.35
+ms_ci95 = 0.01
+max_fk = 2.9e-09
 sols_min = 2
 sols_max = 12
 
 [arms.jaco2_ik.eaik]
 supported = false
 refusal = "6R-Unknown Kinematic Class"
-
 [arms.iiwa14_ik]
 display_name = "KUKA iiwa LBR 14"
 short_name = "iiwa14"
@@ -427,16 +418,15 @@ fk_ceiling_fuzz = 1e-10
 platform_drift = false
 
 [arms.iiwa14_ik.bench]
-ms_mean = 4.84
-ms_ci95 = 0.02
-max_fk = 1e-13
+ms_mean = 0.21
+ms_ci95 = 0.00
+max_fk = 3.7e-14
 sols_min = 128
 sols_max = 128
 
 [arms.iiwa14_ik.eaik]
 supported = false
 refusal = "Currently, only 1-6R robots are solvable with EAIK"
-
 [arms.gen3_ik]
 display_name = "Kinova Gen3 (7-DOF)"
 short_name = "Gen3"
@@ -466,16 +456,15 @@ drift_markers = [
 ]
 
 [arms.gen3_ik.bench]
-ms_mean = 12.87
-ms_ci95 = 0.27
-max_fk = 9.9e-13
-sols_min = 11
-sols_max = 92
+ms_mean = 2.26
+ms_ci95 = 1.15
+max_fk = 1.0e-12
+sols_min = 14
+sols_max = 95
 
 [arms.gen3_ik.eaik]
 supported = false
 refusal = "Currently, only 1-6R robots are solvable with EAIK"
-
 [arms.franka_panda_ik]
 display_name = "Franka Emika Panda (no hand)"
 short_name = "Franka Panda"
@@ -501,16 +490,15 @@ fk_ceiling_fuzz = 1e-4
 platform_drift = false
 
 [arms.franka_panda_ik.bench]
-ms_mean = 3.0
-ms_ci95 = 0.11
-max_fk = 1.3e-11
+ms_mean = 0.13
+ms_ci95 = 0.00
+max_fk = 6.0e-12
 sols_min = 32
 sols_max = 132
 
 [arms.franka_panda_ik.eaik]
 supported = false
 refusal = "Currently, only 1-6R robots are solvable with EAIK"
-
 [arms.xarm7_ik]
 display_name = "UFactory xArm7"
 short_name = "xArm7"
@@ -535,16 +523,15 @@ fk_ceiling_fuzz = 1e-4
 platform_drift = false
 
 [arms.xarm7_ik.bench]
-ms_mean = 6.87
-ms_ci95 = 0.15
-max_fk = 1e-10
-sols_min = 53
-sols_max = 96
+ms_mean = 0.36
+ms_ci95 = 0.01
+max_fk = 1.0e-10
+sols_min = 82
+sols_max = 108
 
 [arms.xarm7_ik.eaik]
 supported = false
 refusal = "Currently, only 1-6R robots are solvable with EAIK"
-
 [arms.xarm6_ik]
 display_name = "UFactory xArm6"
 short_name = "xArm6"
@@ -574,16 +561,15 @@ drift_markers = [
 ]
 
 [arms.xarm6_ik.bench]
-ms_mean = 1.04
-ms_ci95 = 0.02
-max_fk = 2.5e-06
+ms_mean = 0.45
+ms_ci95 = 0.01
+max_fk = 4.3e-09
 sols_min = 8
 sols_max = 16
 
 [arms.xarm6_ik.eaik]
 supported = false
 refusal = "6R-Unknown Kinematic Class"
-
 [arms.z1_ik]
 display_name = "Unitree Z1"
 short_name = "Z1"
@@ -608,21 +594,20 @@ fk_ceiling_fuzz = 1e-7
 platform_drift = false
 
 [arms.z1_ik.bench]
-ms_mean = 1.52
-ms_ci95 = 0.11
-max_fk = 2.8e-15
+ms_mean = 0.02
+ms_ci95 = 0.00
+max_fk = 5.1e-15
 sols_min = 4
 sols_max = 8
 
 [arms.z1_ik.eaik]
 supported = true
 family = "6R-THREE_INNER_PARALLEL"
-ms_mean = 0.00424417
-ms_ci95 = 0.000164035
+ms_mean = 0.00394851
+ms_ci95 = 4.41876e-05
 max_fk = 1.6e-15
 sols_min = 4
 sols_max = 8
-
 [arms.piper_ik]
 display_name = "AgileX PiPER"
 short_name = "PiPER"
@@ -652,17 +637,16 @@ drift_markers = [
 ]
 
 [arms.piper_ik.bench]
-ms_mean = 2.01
-ms_ci95 = 1.01
-max_fk = 9.8e-06
-sols_min = 2
-sols_max = 8
+ms_mean = 0.41
+ms_ci95 = 0.01
+max_fk = 5.0e-06
+sols_min = 1
+sols_max = 10
 
 
 [arms.piper_ik.eaik]
 supported = false
 refusal = "Currently, only 1-6R robots are solvable with EAIK"
-
 [arms.rizon4_ik]
 display_name = "Flexiv Rizon 4"
 short_name = "Rizon 4"
@@ -687,9 +671,9 @@ fk_ceiling_fuzz = 1e-4
 platform_drift = false
 
 [arms.rizon4_ik.bench]
-ms_mean = 16.55
-ms_ci95 = 0.55
-max_fk = 2.8e-07
+ms_mean = 1.72
+ms_ci95 = 0.22
+max_fk = 2.5e-10
 sols_min = 4
 sols_max = 60
 
@@ -697,7 +681,6 @@ sols_max = 60
 [arms.rizon4_ik.eaik]
 supported = false
 refusal = "Currently, only 1-6R robots are solvable with EAIK"
-
 [arms.kassow_kr810_ik]
 display_name = "Kassow KR810"
 short_name = "Kassow KR810"
@@ -721,17 +704,16 @@ fk_ceiling_fuzz = 1e-4
 platform_drift = false
 
 [arms.kassow_kr810_ik.bench]
-ms_mean = 16.52
-ms_ci95 = 0.23
-max_fk = 5.4e-08
-sols_min = 4
-sols_max = 42
+ms_mean = 12.02
+ms_ci95 = 1.31
+max_fk = 9.9e-08
+sols_min = 5
+sols_max = 49
 
 
 [arms.kassow_kr810_ik.eaik]
 supported = false
 refusal = "Currently, only 1-6R robots are solvable with EAIK"
-
 [arms.rizon10_ik]
 display_name = "Flexiv Rizon 10"
 short_name = "Rizon 10"
@@ -755,16 +737,15 @@ fk_ceiling_fuzz = 1e-4
 platform_drift = false
 
 [arms.rizon10_ik.bench]
-ms_mean = 15.13
-ms_ci95 = 0.2
-max_fk = 5.5e-08
+ms_mean = 1.10
+ms_ci95 = 0.02
+max_fk = 2.4e-09
 sols_min = 6
 sols_max = 64
 
 [arms.rizon10_ik.eaik]
 supported = false
 refusal = "Currently, only 1-6R robots are solvable with EAIK"
-
 [arms.fanuc_crx3ia_ik]
 display_name = "FANUC CRX-3iA"
 short_name = "CRX-3iA"
@@ -793,16 +774,15 @@ drift_markers = [
 ]
 
 [arms.fanuc_crx3ia_ik.bench]
-ms_mean = 0.67
-ms_ci95 = 0.01
-max_fk = 1.5e-07
+ms_mean = 0.37
+ms_ci95 = 0.00
+max_fk = 2.0e-09
 sols_min = 8
 sols_max = 12
 
 [arms.fanuc_crx3ia_ik.eaik]
 supported = false
 refusal = "6R-Unknown Kinematic Class"
-
 [arms.fanuc_crx5ia_ik]
 display_name = "FANUC CRX-5iA"
 short_name = "CRX-5iA"
@@ -831,16 +811,15 @@ drift_markers = [
 ]
 
 [arms.fanuc_crx5ia_ik.bench]
-ms_mean = 0.83
-ms_ci95 = 0.1
-max_fk = 3.4e-07
+ms_mean = 0.38
+ms_ci95 = 0.00
+max_fk = 3.5e-08
 sols_min = 8
 sols_max = 12
 
 [arms.fanuc_crx5ia_ik.eaik]
 supported = false
 refusal = "6R-Unknown Kinematic Class"
-
 [arms.fanuc_crx10ia_ik]
 display_name = "FANUC CRX-10iA"
 short_name = "CRX-10iA"
@@ -869,16 +848,15 @@ drift_markers = [
 ]
 
 [arms.fanuc_crx10ia_ik.bench]
-ms_mean = 0.91
-ms_ci95 = 0.06
-max_fk = 7.8e-06
-sols_min = 7
+ms_mean = 0.37
+ms_ci95 = 0.00
+max_fk = 2.3e-09
+sols_min = 8
 sols_max = 12
 
 [arms.fanuc_crx10ia_ik.eaik]
 supported = false
 refusal = "6R-Unknown Kinematic Class"
-
 [arms.fanuc_crx10ialp_ik]
 display_name = "FANUC CRX-10iA/LP"
 short_name = "CRX-10iA/LP"
@@ -907,16 +885,15 @@ drift_markers = [
 ]
 
 [arms.fanuc_crx10ialp_ik.bench]
-ms_mean = 1.01
-ms_ci95 = 0.08
-max_fk = 4.1e-06
+ms_mean = 0.38
+ms_ci95 = 0.00
+max_fk = 1.1e-09
 sols_min = 4
 sols_max = 12
 
 [arms.fanuc_crx10ialp_ik.eaik]
 supported = false
 refusal = "6R-Unknown Kinematic Class"
-
 [arms.fanuc_crx20ial_ik]
 display_name = "FANUC CRX-20iA/L"
 short_name = "CRX-20iA/L"
@@ -945,16 +922,15 @@ drift_markers = [
 ]
 
 [arms.fanuc_crx20ial_ik.bench]
-ms_mean = 0.71
-ms_ci95 = 0.02
-max_fk = 8.7e-07
+ms_mean = 0.37
+ms_ci95 = 0.00
+max_fk = 1.1e-09
 sols_min = 4
 sols_max = 12
 
 [arms.fanuc_crx20ial_ik.eaik]
 supported = false
 refusal = "6R-Unknown Kinematic Class"
-
 [arms.fanuc_crx30ia_ik]
 display_name = "FANUC CRX-30iA"
 short_name = "CRX-30iA"
@@ -983,16 +959,15 @@ drift_markers = [
 ]
 
 [arms.fanuc_crx30ia_ik.bench]
-ms_mean = 1.07
-ms_ci95 = 0.11
-max_fk = 5.0e-06
-sols_min = 4
+ms_mean = 0.38
+ms_ci95 = 0.00
+max_fk = 4.2e-07
+sols_min = 8
 sols_max = 12
 
 [arms.fanuc_crx30ia_ik.eaik]
 supported = false
 refusal = "6R-Unknown Kinematic Class"
-
 [arms.fanuc_crx10ial_ik]
 display_name = "FANUC CRX-10iA/L"
 short_name = "CRX-10iA/L"
@@ -1021,9 +996,9 @@ drift_markers = [
 ]
 
 [arms.fanuc_crx10ial_ik.bench]
-ms_mean = 0.96
-ms_ci95 = 0.01
-max_fk = 2.3e-06
+ms_mean = 0.38
+ms_ci95 = 0.00
+max_fk = 3.5e-09
 sols_min = 4
 sols_max = 12
 
@@ -1031,7 +1006,6 @@ sols_max = 12
 [arms.fanuc_crx10ial_ik.eaik]
 supported = false
 refusal = "6R-Unknown Kinematic Class"
-
 [arms.yam_ik]
 display_name = "I2RT YAM"
 short_name = "YAM"
@@ -1061,16 +1035,15 @@ drift_markers = [
 ]
 
 [arms.yam_ik.bench]
-ms_mean = 1.02
-ms_ci95 = 0.01
-max_fk = 3.5e-07
-sols_min = 5
+ms_mean = 0.46
+ms_ci95 = 0.03
+max_fk = 8.4e-07
+sols_min = 8
 sols_max = 8
 
 [arms.yam_ik.eaik]
 supported = false
 refusal = "6R-Unknown Kinematic Class"
-
 [arms.big_yam_ik]
 display_name = "I2RT big_yam"
 short_name = "big_yam"
@@ -1099,16 +1072,15 @@ drift_markers = [
 ]
 
 [arms.big_yam_ik.bench]
-ms_mean = 1.01
-ms_ci95 = 0.01
-max_fk = 7.2e-07
+ms_mean = 0.40
+ms_ci95 = 0.00
+max_fk = 1.8e-08
 sols_min = 8
 sols_max = 8
 
 [arms.big_yam_ik.eaik]
 supported = false
 refusal = "Intersection point can't be calculated for two parallel axes"
-
 [arms.fr3_ik]
 display_name = "Franka Research 3"
 short_name = "FR3"
@@ -1133,16 +1105,15 @@ fk_ceiling_fuzz = 1e-4
 platform_drift = false
 
 [arms.fr3_ik.bench]
-ms_mean = 2.83
-ms_ci95 = 0.08
-max_fk = 1.3e-11
+ms_mean = 0.12
+ms_ci95 = 0.00
+max_fk = 6.0e-12
 sols_min = 32
 sols_max = 132
 
 [arms.fr3_ik.eaik]
 supported = false
 refusal = "Currently, only 1-6R robots are solvable with EAIK"
-
 [arms.openarm_left_ik]
 display_name = "Enactic OpenArm v2.0 (left)"
 short_name = "OpenArm L"
@@ -1166,8 +1137,8 @@ fk_ceiling_fuzz = 1e-10
 platform_drift = false
 
 [arms.openarm_left_ik.bench]
-ms_mean = 4.54
-ms_ci95 = 0.29
+ms_mean = 0.19
+ms_ci95 = 0.00
 max_fk = 2.6e-14
 sols_min = 128
 sols_max = 128
@@ -1175,7 +1146,6 @@ sols_max = 128
 [arms.openarm_left_ik.eaik]
 supported = false
 refusal = "Currently, only 1-6R robots are solvable with EAIK"
-
 [arms.openarm_right_ik]
 display_name = "Enactic OpenArm v2.0 (right)"
 short_name = "OpenArm R"
@@ -1199,16 +1169,15 @@ fk_ceiling_fuzz = 1e-10
 platform_drift = false
 
 [arms.openarm_right_ik.bench]
-ms_mean = 4.25
-ms_ci95 = 0.04
-max_fk = 4.3e-15
+ms_mean = 0.19
+ms_ci95 = 0.00
+max_fk = 3.3e-15
 sols_min = 128
 sols_max = 128
 
 [arms.openarm_right_ik.eaik]
 supported = false
 refusal = "Currently, only 1-6R robots are solvable with EAIK"
-
 [arms.r1pro_left_ik]
 display_name = "Galaxea R1 Pro (left)"
 short_name = "R1 Pro L"
@@ -1232,16 +1201,15 @@ fk_ceiling_fuzz = 1e-10
 platform_drift = false
 
 [arms.r1pro_left_ik.bench]
-ms_mean = 4.39
-ms_ci95 = 0.29
-max_fk = 3.3e-15
+ms_mean = 0.19
+ms_ci95 = 0.00
+max_fk = 3.6e-15
 sols_min = 128
 sols_max = 128
 
 [arms.r1pro_left_ik.eaik]
 supported = false
 refusal = "Currently, only 1-6R robots are solvable with EAIK"
-
 [arms.r1pro_right_ik]
 display_name = "Galaxea R1 Pro (right)"
 short_name = "R1 Pro R"
@@ -1265,20 +1233,15 @@ fk_ceiling_fuzz = 1e-10
 platform_drift = false
 
 [arms.r1pro_right_ik.bench]
-ms_mean = 4.36
-ms_ci95 = 0.21
-max_fk = 2.7e-15
+ms_mean = 0.19
+ms_ci95 = 0.00
+max_fk = 3.7e-15
 sols_min = 128
 sols_max = 128
 
 [arms.r1pro_right_ik.eaik]
 supported = false
 refusal = "Currently, only 1-6R robots are solvable with EAIK"
-
-# --- Standard Bots (RO1 family reach variants: Thor / Core / Spark). All three
-# are three-parallel 6R (joints 1,2,3 parallel). Thor and Spark author the trio
-# with joint 3 anti-parallel to the trio reference axis -- the exact case the
-# three_parallel axis-sign fix (#398) covers; pre-fix they returned 0 solutions.
 [arms.standardbots_thor_ik]
 display_name = "Standard Bots Thor"
 short_name = "Thor"
@@ -1302,9 +1265,9 @@ fk_ceiling_fuzz = 1e-7
 platform_drift = false
 
 [arms.standardbots_thor_ik.bench]
-ms_mean = 2.44
-ms_ci95 = 0.06
-max_fk = 3.5e-12
+ms_mean = 0.01
+ms_ci95 = 0.00
+max_fk = 8.3e-09
 sols_min = 1
 sols_max = 4
 
@@ -1334,17 +1297,17 @@ fk_ceiling_fuzz = 1e-7
 platform_drift = false
 
 [arms.standardbots_core_ik.bench]
-ms_mean = 2.47
-ms_ci95 = 0.06
-max_fk = 2.4e-12
+ms_mean = 0.01
+ms_ci95 = 0.00
+max_fk = 1.0e-08
 sols_min = 1
 sols_max = 4
 
 [arms.standardbots_core_ik.eaik]
 supported = true
 family = "6R-THREE_INNER_PARALLEL"
-ms_mean = 0.00368185
-ms_ci95 = 4.33799e-05
+ms_mean = 0.00365666
+ms_ci95 = 2.79003e-05
 max_fk = 8.9e-16
 sols_min = 2
 sols_max = 6
@@ -1371,16 +1334,15 @@ fk_ceiling_fuzz = 1e-7
 platform_drift = false
 
 [arms.standardbots_spark_ik.bench]
-ms_mean = 2.46
-ms_ci95 = 0.06
-max_fk = 8.8e-13
+ms_mean = 0.01
+ms_ci95 = 0.00
+max_fk = 8.3e-08
 sols_min = 1
 sols_max = 4
 
 [arms.standardbots_spark_ik.eaik]
 supported = false
 refusal = "classifies as 6R-THREE_INNER_PARALLEL but returns FK-incorrect solutions (max FK 3e+00)"
-
 [arms.gen3_lite_ik]
 display_name = "Kinova Gen3 Lite"
 short_name = "Gen3 Lite"
@@ -1410,9 +1372,9 @@ drift_markers = [
 ]
 
 [arms.gen3_lite_ik.bench]
-ms_mean = 1.35
-ms_ci95 = 0.08
-max_fk = 1.5e-08
+ms_mean = 0.35
+ms_ci95 = 0.01
+max_fk = 6.9e-09
 sols_min = 1
 sols_max = 12
 
@@ -1443,21 +1405,20 @@ fk_ceiling_fuzz = 1e-07
 platform_drift = false
 
 [arms.ur7e_ik.bench]
-ms_mean = 2.53
-ms_ci95 = 1.05
-max_fk = 2.0e-09
+ms_mean = 0.02
+ms_ci95 = 0.00
+max_fk = 1.2e-08
 sols_min = 2
 sols_max = 8
 
 [arms.ur7e_ik.eaik]
 supported = true
 family = "6R-THREE_INNER_PARALLEL"
-ms_mean = 0.00425024
-ms_ci95 = 0.000272561
+ms_mean = 0.00375024
+ms_ci95 = 4.89503e-05
 max_fk = 1.4e-15
 sols_min = 4
 sols_max = 8
-
 [arms.ur12e_ik]
 display_name = "Universal Robots UR12E"
 short_name = "UR12E"
@@ -1482,21 +1443,20 @@ fk_ceiling_fuzz = 1e-07
 platform_drift = false
 
 [arms.ur12e_ik.bench]
-ms_mean = 2.29
-ms_ci95 = 0.32
-max_fk = 2.0e-09
+ms_mean = 0.02
+ms_ci95 = 0.00
+max_fk = 1.2e-08
 sols_min = 2
 sols_max = 8
 
 [arms.ur12e_ik.eaik]
 supported = true
 family = "6R-THREE_INNER_PARALLEL"
-ms_mean = 0.0178584
-ms_ci95 = 0.0053067
+ms_mean = 0.0037556
+ms_ci95 = 4.19338e-05
 max_fk = 1.4e-15
 sols_min = 2
 sols_max = 8
-
 [arms.ur15_ik]
 display_name = "Universal Robots UR15"
 short_name = "UR15"
@@ -1521,21 +1481,20 @@ fk_ceiling_fuzz = 1e-07
 platform_drift = false
 
 [arms.ur15_ik.bench]
-ms_mean = 2.29
-ms_ci95 = 0.18
-max_fk = 2.0e-09
+ms_mean = 0.02
+ms_ci95 = 0.00
+max_fk = 7.6e-11
 sols_min = 2
 sols_max = 8
 
 [arms.ur15_ik.eaik]
 supported = true
 family = "6R-THREE_INNER_PARALLEL"
-ms_mean = 0.00424189
-ms_ci95 = 0.000395057
+ms_mean = 0.00368622
+ms_ci95 = 4.45689e-05
 max_fk = 1.5e-15
 sols_min = 4
 sols_max = 8
-
 [arms.ur18_ik]
 display_name = "Universal Robots UR18"
 short_name = "UR18"
@@ -1560,22 +1519,20 @@ fk_ceiling_fuzz = 1e-07
 platform_drift = false
 
 [arms.ur18_ik.bench]
-ms_mean = 4.11
-ms_ci95 = 1.04
-max_fk = 2.0e-09
+ms_mean = 0.02
+ms_ci95 = 0.00
+max_fk = 1.2e-08
 sols_min = 2
 sols_max = 8
 
 [arms.ur18_ik.eaik]
 supported = true
 family = "6R-THREE_INNER_PARALLEL"
-ms_mean = 0.0039317
-ms_ci95 = 0.000128844
+ms_mean = 0.00360701
+ms_ci95 = 4.47955e-05
 max_fk = 1.5e-15
 sols_min = 2
 sols_max = 8
-
-
 [arms.yumi_left_ik]
 display_name = "ABB YuMi (IRB 14000) left"
 short_name = "YuMi L"
@@ -1605,11 +1562,11 @@ drift_markers = [
 ]
 
 [arms.yumi_left_ik.bench]
-ms_mean = 20.35
-ms_ci95 = 1.75
+ms_mean = 2.66
+ms_ci95 = 0.19
 max_fk = 1.0e-12
-sols_min = 26
-sols_max = 70
+sols_min = 42
+sols_max = 89
 
 [arms.yumi_left_ik.eaik]
 supported = false
@@ -1643,16 +1600,15 @@ drift_markers = [
 ]
 
 [arms.yumi_right_ik.bench]
-ms_mean = 19.43
-ms_ci95 = 1.38
+ms_mean = 2.56
+ms_ci95 = 0.09
 max_fk = 1.0e-12
-sols_min = 24
-sols_max = 79
+sols_min = 39
+sols_max = 94
 
 [arms.yumi_right_ik.eaik]
 supported = false
 refusal = "Currently, only 1-6R robots are solvable with EAIK"
-
 [arms.fanuc_m710ic_ik]
 display_name = "FANUC M-710iC/70"
 short_name = "M-710iC"
@@ -1677,21 +1633,20 @@ fk_ceiling_fuzz = 1e-9
 platform_drift = false
 
 [arms.fanuc_m710ic_ik.bench]
-ms_mean = 0.22
+ms_mean = 0.01
 ms_ci95 = 0.00
-max_fk = 8.3e-12
+max_fk = 8.9e-09
 sols_min = 4
 sols_max = 8
 
 [arms.fanuc_m710ic_ik.eaik]
 supported = true
 family = "6R-SPHERICAL_SECOND_TWO_PARALLEL"
-ms_mean = 0.00396918
-ms_ci95 = 0.000224459
+ms_mean = 0.00365915
+ms_ci95 = 2.94149e-05
 max_fk = 8.2e-12
 sols_min = 4
 sols_max = 8
-
 [arms.j2s6s300_ik]
 display_name = "Kinova JACO j2s6s300"
 short_name = "JACO j2s6s300"
@@ -1716,16 +1671,15 @@ fk_ceiling_fuzz = 1e-7
 platform_drift = false
 
 [arms.j2s6s300_ik.bench]
-ms_mean = 0.38
-ms_ci95 = 0.01
-max_fk = 3.7e-08
+ms_mean = 0.01
+ms_ci95 = 0.00
+max_fk = 5.6e-08
 sols_min = 6
 sols_max = 8
 
 [arms.j2s6s300_ik.eaik]
 supported = false
 refusal = "Currently, only 1-6R robots are solvable with EAIK"
-
 [arms.iiwa7_ik]
 display_name = "KUKA iiwa LBR 7"
 short_name = "iiwa7"
@@ -1750,9 +1704,9 @@ fk_ceiling_fuzz = 1e-10
 platform_drift = false
 
 [arms.iiwa7_ik.bench]
-ms_mean = 5.83
-ms_ci95 = 0.59
-max_fk = 5.1e-14
+ms_mean = 0.20
+ms_ci95 = 0.00
+max_fk = 2.4e-13
 sols_min = 128
 sols_max = 128
 
@@ -1787,16 +1741,15 @@ drift_markers = [
 ]
 
 [arms.j2s7s300_ik.bench]
-ms_mean = 17.50
-ms_ci95 = 0.98
+ms_mean = 2.68
+ms_ci95 = 0.16
 max_fk = 9.9e-13
-sols_min = 2
-sols_max = 66
+sols_min = 18
+sols_max = 80
 
 [arms.j2s7s300_ik.eaik]
 supported = false
 refusal = "Currently, only 1-6R robots are solvable with EAIK"
-
 [arms.irb120_ik]
 display_name = "ABB IRB 120"
 short_name = "IRB 120"
@@ -1820,17 +1773,17 @@ fk_ceiling_fuzz = 1e-10
 platform_drift = false
 
 [arms.irb120_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 0.24
-ms_ci95 = 0.01
-max_fk = 4.4e-12
+ms_mean = 0.01
+ms_ci95 = 0.00
+max_fk = 8.9e-09
 sols_min = 8
 sols_max = 8
 
 [arms.irb120_ik.eaik]
 supported = true
 family = "6R-SPHERICAL_SECOND_TWO_PARALLEL"
-ms_mean = 0.00448146
-ms_ci95 = 0.000529408
+ms_mean = 0.00381751
+ms_ci95 = 2.6883e-05
 max_fk = 3.2e-12
 sols_min = 8
 sols_max = 8
@@ -1857,17 +1810,17 @@ fk_ceiling_fuzz = 1e-10
 platform_drift = false
 
 [arms.irb1600_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 0.21
+ms_mean = 0.01
 ms_ci95 = 0.00
-max_fk = 3.9e-12
+max_fk = 2.5e-09
 sols_min = 4
 sols_max = 8
 
 [arms.irb1600_ik.eaik]
 supported = true
 family = "6R-SPHERICAL_SECOND_TWO_PARALLEL"
-ms_mean = 0.00345045
-ms_ci95 = 4.81469e-05
+ms_mean = 0.00361603
+ms_ci95 = 3.54306e-05
 max_fk = 4.7e-12
 sols_min = 4
 sols_max = 8
@@ -1894,17 +1847,17 @@ fk_ceiling_fuzz = 1e-10
 platform_drift = false
 
 [arms.irb6700_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 0.21
+ms_mean = 0.01
 ms_ci95 = 0.00
-max_fk = 2.8e-12
+max_fk = 2.5e-09
 sols_min = 4
 sols_max = 8
 
 [arms.irb6700_ik.eaik]
 supported = true
 family = "6R-SPHERICAL_SECOND_TWO_PARALLEL"
-ms_mean = 0.00376978
-ms_ci95 = 0.000394431
+ms_mean = 0.00361482
+ms_ci95 = 6.6149e-05
 max_fk = 8.2e-12
 sols_min = 4
 sols_max = 8
@@ -1931,17 +1884,17 @@ fk_ceiling_fuzz = 1e-10
 platform_drift = false
 
 [arms.kr6_r900_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 0.21
-ms_ci95 = 0.00
-max_fk = 3.9e-12
+ms_mean = 0.02
+ms_ci95 = 0.01
+max_fk = 8.9e-09
 sols_min = 4
 sols_max = 4
 
 [arms.kr6_r900_ik.eaik]
 supported = true
 family = "6R-SPHERICAL_SECOND_TWO_PARALLEL"
-ms_mean = 0.0030694
-ms_ci95 = 4.10419e-05
+ms_mean = 0.00415441
+ms_ci95 = 0.00140394
 max_fk = 8.6e-12
 sols_min = 4
 sols_max = 4
@@ -1968,21 +1921,20 @@ fk_ceiling_fuzz = 1e-7
 platform_drift = false
 
 [arms.kr210_r2700_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 0.33
+ms_mean = 0.02
 ms_ci95 = 0.00
-max_fk = 9.2e-08
+max_fk = 4.0e-09
 sols_min = 4
 sols_max = 4
 
 [arms.kr210_r2700_ik.eaik]
 supported = true
 family = "6R-SPHERICAL_SECOND_TWO_PARALLEL"
-ms_mean = 0.00302167
-ms_ci95 = 1.83368e-05
+ms_mean = 0.00798101
+ms_ci95 = 0.00476806
 max_fk = 1.2e-15
 sols_min = 4
 sols_max = 4
-
 [arms.gp8_ik]
 display_name = "Yaskawa GP8"
 short_name = "GP8"
@@ -2006,17 +1958,17 @@ fk_ceiling_fuzz = 1e-09  # from the validation smoke (~10x worst FK)
 platform_drift = false
 
 [arms.gp8_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 0.30
-ms_ci95 = 0.03
-max_fk = 2.4e-12
+ms_mean = 0.01
+ms_ci95 = 0.00
+max_fk = 8.9e-09
 sols_min = 8
 sols_max = 8
 
 [arms.gp8_ik.eaik]
 supported = true
 family = "6R-SPHERICAL_SECOND_TWO_PARALLEL"
-ms_mean = 0.00410456
-ms_ci95 = 0.000163968
+ms_mean = 0.00392957
+ms_ci95 = 5.7272e-05
 max_fk = 8.1e-12
 sols_min = 8
 sols_max = 8
@@ -2043,17 +1995,17 @@ fk_ceiling_fuzz = 1e-09  # from the validation smoke (~10x worst FK)
 platform_drift = false
 
 [arms.rs007n_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 0.24
+ms_mean = 0.01
 ms_ci95 = 0.00
-max_fk = 8.1e-12
+max_fk = 2.6e-09
 sols_min = 4
 sols_max = 8
 
 [arms.rs007n_ik.eaik]
 supported = true
 family = "6R-SPHERICAL_SECOND_TWO_PARALLEL"
-ms_mean = 0.00488917
-ms_ci95 = 0.000930451
+ms_mean = 0.00399484
+ms_ci95 = 0.000214421
 max_fk = 4.4e-12
 sols_min = 8
 sols_max = 8
@@ -2080,17 +2032,17 @@ fk_ceiling_fuzz = 1e-09  # from the validation smoke (~10x worst FK)
 platform_drift = false
 
 [arms.lrmate200id_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 0.41
-ms_ci95 = 0.06
-max_fk = 2.7e-12
+ms_mean = 0.01
+ms_ci95 = 0.00
+max_fk = 2.5e-09
 sols_min = 8
 sols_max = 8
 
 [arms.lrmate200id_ik.eaik]
 supported = true
 family = "6R-SPHERICAL_SECOND_TWO_PARALLEL"
-ms_mean = 0.00399542
-ms_ci95 = 0.000336859
+ms_mean = 0.00383172
+ms_ci95 = 2.45606e-05
 max_fk = 3.6e-12
 sols_min = 8
 sols_max = 8
@@ -2117,17 +2069,17 @@ fk_ceiling_fuzz = 1e-09  # from the validation smoke (~10x worst FK)
 platform_drift = false
 
 [arms.r2000ic210l_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 0.22
+ms_mean = 0.01
 ms_ci95 = 0.00
-max_fk = 8.3e-12
+max_fk = 2.5e-09
 sols_min = 4
 sols_max = 8
 
 [arms.r2000ic210l_ik.eaik]
 supported = true
 family = "6R-SPHERICAL_SECOND_TWO_PARALLEL"
-ms_mean = 0.00354834
-ms_ci95 = 8.48088e-05
+ms_mean = 0.00374121
+ms_ci95 = 3.81274e-05
 max_fk = 8.2e-12
 sols_min = 4
 sols_max = 8
@@ -2154,21 +2106,20 @@ fk_ceiling_fuzz = 1e-09  # from the validation smoke (~10x worst FK)
 platform_drift = false
 
 [arms.rx160_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 0.23
-ms_ci95 = 0.01
-max_fk = 8.2e-12
+ms_mean = 0.02
+ms_ci95 = 0.00
+max_fk = 8.9e-09
 sols_min = 2
 sols_max = 8
 
 [arms.rx160_ik.eaik]
 supported = true
 family = "6R-SPHERICAL_SECOND_TWO_PARALLEL"
-ms_mean = 0.00388395
-ms_ci95 = 0.000669321
+ms_mean = 0.00361145
+ms_ci95 = 0.00011926
 max_fk = 8.2e-12
 sols_min = 4
 sols_max = 8
-
 [arms.rm75_ik]
 display_name = "Realman RM75"
 short_name = "RM75"
@@ -2196,8 +2147,8 @@ drift_markers = [
 ]
 
 [arms.rm75_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 10.03
-ms_ci95 = 0.71
+ms_mean = 0.60
+ms_ci95 = 0.01
 max_fk = 1.0e-12
 sols_min = 128
 sols_max = 128
@@ -2232,16 +2183,15 @@ drift_markers = [
 ]
 
 [arms.gen72_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 4.36
-ms_ci95 = 0.09
+ms_mean = 0.30
+ms_ci95 = 0.00
 max_fk = 1.0e-10
-sols_min = 34
-sols_max = 40
+sols_min = 50
+sols_max = 72
 
 [arms.gen72_ik.eaik]
 supported = false
 refusal = "Currently, only 1-6R robots are solvable with EAIK"
-
 [arms.cr5_ik]
 display_name = "Dobot CR5"
 short_name = "CR5"
@@ -2265,17 +2215,17 @@ fk_ceiling_fuzz = 1e-07  # from the validation smoke (~10x worst FK)
 platform_drift = false
 
 [arms.cr5_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 2.91
-ms_ci95 = 0.11
-max_fk = 8.2e-11
+ms_mean = 0.01
+ms_ci95 = 0.00
+max_fk = 3.2e-11
 sols_min = 1
 sols_max = 4
 
 [arms.cr5_ik.eaik]
 supported = true
 family = "6R-THREE_INNER_PARALLEL"
-ms_mean = 0.00497792
-ms_ci95 = 0.00092524
+ms_mean = 0.00385067
+ms_ci95 = 0.00014825
 max_fk = 1.9e-15
 sols_min = 2
 sols_max = 4
@@ -2302,17 +2252,17 @@ fk_ceiling_fuzz = 1e-07  # from the validation smoke (~10x worst FK)
 platform_drift = false
 
 [arms.nova5_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 4.26
-ms_ci95 = 0.92
-max_fk = 3.5e-11
+ms_mean = 0.01
+ms_ci95 = 0.00
+max_fk = 6.7e-08
 sols_min = 1
 sols_max = 4
 
 [arms.nova5_ik.eaik]
 supported = true
 family = "6R-THREE_INNER_PARALLEL"
-ms_mean = 0.00398813
-ms_ci95 = 0.000610655
+ms_mean = 0.00385771
+ms_ci95 = 0.000341935
 max_fk = 1.0e-15
 sols_min = 2
 sols_max = 4
@@ -2339,17 +2289,17 @@ fk_ceiling_fuzz = 1e-09  # from the validation smoke (~10x worst FK)
 platform_drift = false
 
 [arms.rv4fr_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 0.24
-ms_ci95 = 0.01
-max_fk = 8.3e-12
+ms_mean = 0.01
+ms_ci95 = 0.00
+max_fk = 8.9e-09
 sols_min = 8
 sols_max = 8
 
 [arms.rv4fr_ik.eaik]
 supported = true
 family = "6R-SPHERICAL_SECOND_TWO_PARALLEL"
-ms_mean = 0.00389747
-ms_ci95 = 6.05925e-05
+ms_mean = 0.00389715
+ms_ci95 = 0.000114225
 max_fk = 8.4e-12
 sols_min = 8
 sols_max = 8
@@ -2376,17 +2326,17 @@ fk_ceiling_fuzz = 1e-6  # from the validation smoke (~10x worst FK)
 platform_drift = false
 
 [arms.hh020_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 0.61
-ms_ci95 = 0.07
-max_fk = 2.2e-07
+ms_mean = 0.01
+ms_ci95 = 0.00
+max_fk = 9.2e-08
 sols_min = 4
 sols_max = 8
 
 [arms.hh020_ik.eaik]
 supported = true
 family = "6R-SPHERICAL_SECOND_TWO_PARALLEL"
-ms_mean = 0.00518667
-ms_ci95 = 0.00222167
+ms_mean = 0.00374145
+ms_ci95 = 0.000173534
 max_fk = 2.4e-14
 sols_min = 4
 sols_max = 8
@@ -2413,17 +2363,17 @@ fk_ceiling_fuzz = 1e-09  # from the validation smoke (~10x worst FK)
 platform_drift = false
 
 [arms.vs060_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 0.23
-ms_ci95 = 0.01
-max_fk = 8.2e-12
+ms_mean = 0.01
+ms_ci95 = 0.00
+max_fk = 2.5e-09
 sols_min = 4
 sols_max = 8
 
 [arms.vs060_ik.eaik]
 supported = true
 family = "6R-SPHERICAL_SECOND_TWO_PARALLEL"
-ms_mean = 0.00507818
-ms_ci95 = 0.00140292
+ms_mean = 0.00391314
+ms_ci95 = 7.35587e-05
 max_fk = 8.3e-12
 sols_min = 8
 sols_max = 8
@@ -2454,11 +2404,11 @@ drift_markers = [
 ]
 
 [arms.m1013_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 1.35
-ms_ci95 = 0.12
-max_fk = 7.5e-06
+ms_mean = 0.41
+ms_ci95 = 0.01
+max_fk = 7.6e-06
 sols_min = 2
-sols_max = 8
+sols_max = 9
 
 [arms.m1013_ik.eaik]
 supported = false
@@ -2490,11 +2440,11 @@ drift_markers = [
 ]
 
 [arms.m0609_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 1.78
-ms_ci95 = 0.62
-max_fk = 9.8e-06
+ms_mean = 0.50
+ms_ci95 = 0.09
+max_fk = 9.5e-06
 sols_min = 2
-sols_max = 8
+sols_max = 9
 
 [arms.m0609_ik.eaik]
 supported = false
@@ -2526,16 +2476,15 @@ drift_markers = [
 ]
 
 [arms.hc10_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 1.91
-ms_ci95 = 0.94
-max_fk = 6.2e-06
+ms_mean = 0.41
+ms_ci95 = 0.01
+max_fk = 2.3e-08
 sols_min = 4
 sols_max = 16
 
 [arms.hc10_ik.eaik]
 supported = false
 refusal = "6R-Unknown Kinematic Class"
-
 [arms.xmatepro7_ik]
 display_name = "Rokae xMate Pro7"
 short_name = "xMate Pro7"
@@ -2559,8 +2508,8 @@ fk_ceiling_fuzz = 1e-09  # from the validation smoke (~10x worst FK)
 platform_drift = false
 
 [arms.xmatepro7_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 6.70
-ms_ci95 = 0.91
+ms_mean = 0.23
+ms_ci95 = 0.01
 max_fk = 1.0e-12
 sols_min = 128
 sols_max = 128
@@ -2568,7 +2517,6 @@ sols_max = 128
 [arms.xmatepro7_ik.eaik]
 supported = false
 refusal = "Currently, only 1-6R robots are solvable with EAIK"
-
 [arms.xmatecr7_ik]
 display_name = "Rokae xMate CR7"
 short_name = "xMate CR7"
@@ -2596,9 +2544,9 @@ drift_markers = [
 ]
 
 [arms.xmatecr7_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 1.03
-ms_ci95 = 0.03
-max_fk = 1.7e-08
+ms_mean = 0.40
+ms_ci95 = 0.01
+max_fk = 7.9e-09
 sols_min = 4
 sols_max = 12
 
@@ -2632,16 +2580,15 @@ drift_markers = [
 ]
 
 [arms.xmatesr3_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 0.88
-ms_ci95 = 0.06
-max_fk = 6.1e-09
+ms_mean = 0.34
+ms_ci95 = 0.01
+max_fk = 2.2e-09
 sols_min = 2
 sols_max = 12
 
 [arms.xmatesr3_ik.eaik]
 supported = false
 refusal = "6R-Unknown Kinematic Class"
-
 [arms.viperx300s_ik]
 display_name = "Trossen ViperX 300s"
 short_name = "ViperX 300s"
@@ -2665,21 +2612,20 @@ fk_ceiling_fuzz = 1e-09  # from the validation smoke (~10x worst FK)
 platform_drift = false
 
 [arms.viperx300s_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 0.31
-ms_ci95 = 0.02
-max_fk = 2.9e-12
+ms_mean = 0.01
+ms_ci95 = 0.00
+max_fk = 2.6e-09
 sols_min = 8
 sols_max = 8
 
 [arms.viperx300s_ik.eaik]
 supported = true
 family = "6R-SPHERICAL_SECOND_TWO_PARALLEL"
-ms_mean = 0.0047383
-ms_ci95 = 0.000881919
+ms_mean = 0.00337791
+ms_ci95 = 8.56748e-05
 max_fk = 8.5e-16
 sols_min = 8
 sols_max = 8
-
 [arms.widowx250s_ik]
 display_name = "Trossen WidowX 250s"
 short_name = "WidowX 250s"
@@ -2703,17 +2649,17 @@ fk_ceiling_fuzz = 1e-09  # from the validation smoke (~10x worst FK)
 platform_drift = false
 
 [arms.widowx250s_ik.bench]  # filled by scripts/regen_bench.py
-ms_mean = 0.53
-ms_ci95 = 0.07
-max_fk = 8.2e-12
+ms_mean = 0.01
+ms_ci95 = 0.00
+max_fk = 9.0e-09
 sols_min = 8
 sols_max = 8
 
 [arms.widowx250s_ik.eaik]
 supported = true
 family = "6R-SPHERICAL_SECOND_TWO_PARALLEL"
-ms_mean = 0.00644581
-ms_ci95 = 0.00181039
+ms_mean = 0.00364024
+ms_ci95 = 0.000161321
 max_fk = 1.0e-15
 sols_min = 8
 sols_max = 8

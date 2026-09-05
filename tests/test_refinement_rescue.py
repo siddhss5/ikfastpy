@@ -83,7 +83,11 @@ def test_direct_solve_at_ridge_returns_zero(
     # allow_rescue=False isolates the purely-analytical path: bulletproof
     # solve() now auto-recovers these ridges via the rescue (#319), so the
     # "direct returns 0" baseline must opt out of that fallback.
-    sols = mod.solve(T, respect_limits=False, allow_rescue=False)
+    # native=False: this pins the *Python analytical* path's ridge behaviour (the
+    # baseline for the rescue test below). The native path may extract the ridge
+    # differently (relative-completeness contract, #554); its coverage is gated in
+    # tests/test_native_dispatch.py.
+    sols = mod.solve(T, respect_limits=False, allow_rescue=False, native=False)
     assert len(sols) == 0, (
         f"{arm_name}: direct solve at the stored ridge q* now returns "
         f"{len(sols)} sols; the ridge is healed and this reproducer is "
@@ -143,7 +147,12 @@ def test_bulletproof_solve_auto_recovers_ridge(
     mod = importlib.import_module(f"ssik.prebuilt.{arm_name}")
     T = mod.fk(q_star)
 
-    sols = mod.solve(T, respect_limits=False)
+    # native=False: this asserts the #319 Python bulletproof-rescue contract at a
+    # pinned ridge, including the refinement_used=="lm" tag. Native RR-jointlock
+    # recovers the ridge through its lock-sweep rather than the LM T-perturbation
+    # rescue (tagged differently), so the "lm" invariant is Python-path-specific;
+    # native ridge coverage is gated by the relative-completeness model (#554).
+    sols = mod.solve(T, respect_limits=False, native=False)
 
     assert len(sols) >= n_expected_min, (
         f"{arm_name}: bulletproof solve() recovered {len(sols)} sols at the "

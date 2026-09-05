@@ -17,6 +17,8 @@
 #include <algorithm>
 #include <atomic>
 #include <cstddef>
+#include <exception>
+#include <mutex>
 #include <thread>
 #include <vector>
 
@@ -77,9 +79,23 @@ void parallel_for(std::size_t n, Fn&& fn, std::size_t min_n = 2) {
   // Each thread of execution marks itself in-region for the duration so a nested
   // parallel_for on it runs serial. Spawned workers start with a fresh (false)
   // thread_local and die after join; the calling thread saves/restores its flag.
-  const auto run_range = [&fn](std::size_t lo, std::size_t hi) {
+  //
+  // Exception safety: a body `fn(i)` that throws must NOT terminate the process.
+  // An uncaught throw on a worker would std::terminate directly; an uncaught throw
+  // on the calling thread would skip the join loop below, and the joinable
+  // std::thread destructors would then std::terminate. So every range catches,
+  // stashes the first exception, and we always join, then rethrow on the calling
+  // thread -- giving the same observable behaviour as the serial path.
+  std::exception_ptr first_err;
+  std::mutex err_mtx;
+  const auto run_range = [&](std::size_t lo, std::size_t hi) {
     parallel_in_region() = true;
-    for (std::size_t i = lo; i < hi; ++i) fn(i);
+    try {
+      for (std::size_t i = lo; i < hi; ++i) fn(i);
+    } catch (...) {
+      std::lock_guard<std::mutex> guard(err_mtx);
+      if (!first_err) first_err = std::current_exception();
+    }
   };
   std::vector<std::thread> pool;
   pool.reserve(workers - 1);
@@ -91,7 +107,8 @@ void parallel_for(std::size_t n, Fn&& fn, std::size_t min_n = 2) {
   const bool outer = parallel_in_region();
   run_range(0, std::min(n, chunk));  // calling thread runs chunk 0
   parallel_in_region() = outer;      // restore (spawned workers' flags die with them)
-  for (auto& t : pool) t.join();
+  for (auto& t : pool) t.join();     // always reached, even if a range threw
+  if (first_err) std::rethrow_exception(first_err);
 }
 
 }  // namespace ssik

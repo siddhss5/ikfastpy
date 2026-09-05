@@ -308,8 +308,9 @@ def _render_specialised(
 
 
 # Injected into the 6R orchestrator's solve() for native-capable families (#507):
-# a `native: bool = False` kwarg plus an early dispatch to the shipped C++
-# extension that silently falls back (returns None -> continue) when unavailable.
+# a `native: bool = True` kwarg (the default since #554) plus an early dispatch to
+# the shipped C++ extension that silently falls back (returns None -> continue)
+# when unavailable (Windows / source installs).
 _NATIVE_HOOK = """\
     if native:
         _native_sols = _try_native_solve(
@@ -373,12 +374,15 @@ def _render_rr_native_loader() -> str:
 
 # Docstring entry for the injected `native` kwarg (dedented base indent).
 _NATIVE_DOC = """\
-    :param native: opt into the shipped native (C++) backend for this
-        arm's solver family (~50x faster). Returns the same solution
-        *set*; the *order* without a seed and the near-singular
-        *representative* may differ (numpy vs Eigen). Silently falls back
-        to the Python path when the native extension isn't available
-        (Windows / source installs). Default ``False``.
+    :param native: use the shipped native (C++) backend for this arm's
+        solver family (the default; typically 2-100x faster). Returns the
+        same solution *set*; the *order* without a seed and the
+        near-singular *representative* may differ (numpy vs Eigen), and
+        redundant-7R arms may sample the self-motion manifold differently.
+        Silently falls back to the Python path when the native extension
+        isn't bundled (Windows / source installs). Pass ``native=False``
+        for the pure-Python path (identical algorithm, no C++ dependency).
+        Default ``True``.
 """
 
 
@@ -844,7 +848,7 @@ def _render_specialised_solve_orchestrator(
         # families opt in, so every other artifact stays byte-identical.
         template = template.replace(
             "    seed_tolerance: float | None = None,\n):",
-            "    seed_tolerance: float | None = None,\n    native: bool = False,\n):",
+            "    seed_tolerance: float | None = None,\n    native: bool = True,\n):",
         )
         template = template.replace(
             '        raise ValueError("seed_tolerance requires q_seed")\n'
@@ -1306,7 +1310,7 @@ def _render_specialised_solve_orchestrator_7r(emit_native: bool = False) -> str:
         # HP kernel, from the sidecar .npz). Only fires when native=True.
         template = template.replace(
             "    seed_tolerance: float | None = None,\n):",
-            "    seed_tolerance: float | None = None,\n    native: bool = False,\n):",
+            "    seed_tolerance: float | None = None,\n    native: bool = True,\n):",
         )
         template = template.replace(
             '        raise ValueError("seed_tolerance requires q_seed")\n'
@@ -1698,7 +1702,7 @@ def _render_solve_function(solver_short: str, emit_native: bool = False) -> str:
         # byte-identical.
         template = template.replace(
             "    seed_tolerance: float | None = None,\n):",
-            "    seed_tolerance: float | None = None,\n    native: bool = False,\n):",
+            "    seed_tolerance: float | None = None,\n    native: bool = True,\n):",
         )
         template = template.replace(
             "    if seed_tolerance is not None and q_seed is None:\n"
