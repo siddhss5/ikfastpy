@@ -5,7 +5,17 @@
 [![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20278005.svg)](https://doi.org/10.5281/zenodo.20278005)
 
-Analytical inverse kinematics for 6R and 7R revolute robot arms. Each arm becomes a single self-contained Python module that returns **every IK branch** with FK closure well below typical robot repeatability, and tightenable to machine precision when needed.
+Reliable enumerative inverse kinematics for 6R and 7R revolute robot arms, including non-Pieper 6R and non-SRS 7R geometries.
+
+The mathematics of inverse kinematics and the numerical behavior of an IK solver are not the same thing. A manipulator may admit an exact algebraic reduction while a particular finite-precision realization loses roots, becomes ill-conditioned, or returns no solution for a pose known to be reachable. **ssik is built around the stronger requirement that IK solutions must actually be recoverable and independently verifiable across the robot workspace.**
+
+For 6R arms, ssik enumerates the isolated IK branches. For redundant 7R arms, where the solution set is generically a one-dimensional manifold, ssik samples or parameterizes redundancy and enumerates the discrete IK branches conditional on each redundancy value. Every retained candidate is checked by forward-kinematic closure against the original robot model, and runs through the native C++ backend by default (typically 2–100× faster than pure Python, with an automatic pure-Python fallback).
+
+**72 arms** ship prebuilt, including Universal Robots, Franka, KUKA iiwa, Kinova JACO/Gen3, Flexiv Rizon, Kassow, ABB YuMi, FANUC CRX, and many others. `ssik build <your.urdf>` specializes the same pipeline to a new robot: it examines the manipulator geometry, selects the simplest structurally valid solver, specializes robot-dependent algebra offline, and — where algebraically equivalent formulations exist — chooses representations for numerical conditioning.
+
+The governing principle is simple:
+
+> **Solvability is a property of the kinematic equations. Reliability is a property of the solver.**
 
 ## Install
 
@@ -13,7 +23,7 @@ Analytical inverse kinematics for 6R and 7R revolute robot arms. Each arm become
 pip install ssik
 ```
 
-Python 3.11+. Wheels for Linux x86_64, macOS arm64, macOS x86_64, Windows x86_64.
+Python 3.11+. Wheels for Linux x86_64, macOS arm64, macOS x86_64, Windows x86_64. The native C++ backend is bundled in the Linux and macOS wheels (and used by default); Windows and source installs transparently run the identical pure-Python path.
 
 ## Quickstart
 
@@ -21,11 +31,21 @@ Python 3.11+. Wheels for Linux x86_64, macOS arm64, macOS x86_64, Windows x86_64
 from ssik.prebuilt import franka_panda_ik
 import numpy as np
 
-T_target = np.eye(4); T_target[:3, 3] = [0.5, 0.1, 0.3]
-sols = franka_panda_ik.solve(T_target)      # every analytical IK branch
+T_target = np.eye(4)
+T_target[:3, 3] = [0.5, 0.1, 0.3]
+
+sols = franka_panda_ik.solve(T_target)
 ```
 
-`sols` is a `list[Solution]`. Each `Solution` carries `q` (the joint vector), `fk_residual` (‖FK(q) − T‖), and which polish path fired. Empty list = pose is unreachable.
+`sols` is a `list[Solution]`. Each `Solution` carries:
+
+- `q`: the joint configuration,
+- `fk_residual`: `‖FK(q) − T_target‖`,
+- `refinement_used`: whether numerical polishing was required.
+
+For a 6R arm, the list contains the certified isolated IK branches ssik recovered. For a 7R arm it contains branches obtained across the chosen redundancy samples.
+
+An empty list means **no certified solution was returned** — which, by itself, is not a mathematical proof that the pose is unreachable. Use `explain=True` when diagnosing an empty result.
 
 ### See every branch at once
 
@@ -72,11 +92,62 @@ Each loop below is one arm's interactive demo running for ~3 seconds: the live r
 
 <img src="docs/assets/per_arm/rizon4_ik.gif" alt="Flexiv Rizon 4 IK demo" width="480">
 
+## Why ssik exists
+
+General 6R inverse kinematics has been algebraically solvable for decades. Classical work by Raghavan–Roth, Manocha–Canny, and Husty–Pfurner showed how the kinematic equations of a general revolute 6R manipulator reduce to finite polynomial or eigenvalue problems. Geometric approaches such as IK-Geo show how manipulator structure can simplify the same problem dramatically.
+
+The remaining practical problem is **numerical recovery**. Two algebraically equivalent formulations can behave very differently in floating-point arithmetic. In ssik's Raghavan–Roth implementation, for example, changing which joint is used as the elimination variable on the Kinova JACO 2 changes the conditioning of the quadratic coefficient matrix from approximately
+
+```text
+3.75 × 10^16   →   127
+```
+
+while leaving the exact IK problem unchanged. One formulation loses solutions to floating-point error; the other recovers them.
+
+This distinction drives the design of ssik:
+
+```text
+kinematic model
+      │
+      ▼
+structural classification ── exploit special geometry when available
+      │                       (else general algebraic elimination)
+      ▼
+numerical representation selection   (choose the best-conditioned equivalent)
+      │
+      ▼
+candidate IK solutions
+      │
+      ▼
+FK certification / optional refinement / recovery
+      │
+      ▼
+certified solutions
+```
+
+Special geometry determines **how cheaply and robustly** IK is solved, not whether enumerative IK is available at all. The goal is not to possess a derivation that is complete in exact arithmetic — it is to make that derivation survive contact with real robot geometry, finite precision, singular and near-singular configurations, joint limits, and deployment software.
+
 ## The artifact model
 
-ssik is built around **per-arm artifact modules**. Each artifact is a single `.py` file with the per-arm KinBody constants, the dispatched solver, and any cached symbolic preprocessing already baked in. **No URDF parsing, no `urchin`, no `sympy` on the runtime import path.** A robot stack that imports `<arm>_ik.py` carries no algorithmic complexity beyond what the build pipeline already resolved.
+ssik treats IK generation as an offline specialization problem. Each robot becomes a self-contained artifact holding its normalized kinematics, the selected solver, robot-specific constants, and any symbolic or algebraic preprocessing that can be moved off the runtime path:
 
-This is the same idea OpenRAVE's IKFast had (generate per-arm specialised IK code at design time, run pure numeric at deployment) but without IKFast's brittleness on non-Pieper geometries.
+```text
+URDF / robot specification
+        │
+        ▼
+geometry + solver specialization
+        │
+        ▼
+conditioning-aware preprocessing
+        │
+        ▼
+<arm>_ik.py  +  self-contained C++ artifact
+        │
+        ▼
+pure numerical solve at deployment
+```
+
+There is no URDF parsing, `urchin`, or `sympy` on the artifact runtime path. This follows the deployment precedent OpenRAVE's IKFast established — do robot-specific symbolic work once, then ship a numerical artifact — extended across a heterogeneous solver hierarchy (geometric closed forms, general 6R algebraic elimination, redundant 7R reductions), and without IKFast's brittleness on non-Pieper geometries. The artifact encodes not just *which robot* is being solved, but *which computational representation of that robot's IK was found to be appropriate*.
 
 There are two artifact paths:
 
@@ -496,12 +567,14 @@ Contributors extending ssik's own test fixtures (vs deploying for their own arm)
 A `list[Solution]`. Each `Solution` has:
 
 - `q`: joint-angle vector (length DOF)
-- `fk_residual`: `‖FK(q) − T‖_F` (Frobenius norm against the original URDF / spec FK)
+- `fk_residual`: `‖FK(q) − T_target‖_F` (Frobenius norm against the original URDF / spec FK)
 - `refinement_used`: `"none"` or `"lm"` if Levenberg–Marquardt polish fired
 
-A single 6-DOF target pose admits up to **16 analytical IK branches** (8 typical for a Pieper-class arm: 4 shoulder × 2 elbow, with the wrist deterministic). For 7R redundant arms the IK is a 1-parameter family; ssik discretises it into 32–256 branches per pose depending on the swivel-sample count.
+For a generic **6R** arm the IK solution set is finite, with at most **16 isolated solutions** (8 typical for a Pieper-class arm: 4 shoulder × 2 elbow, wrist deterministic). ssik recovers these discrete branches and rejects any candidate that does not close under the original forward kinematics.
 
-By default `solve()` runs **`respect_limits=True`**: out-of-URDF-limit branches are dropped (with a `q ± 2π` rescue pass first). On 7R jointlock arms the limits filter runs *during* the lock-sweep so `max_solutions=1` short-circuits on the first in-limits candidate rather than wasting samples on branches the postprocess would discard. Pass `respect_limits=False` for the raw geometric set.
+For a **7R** arm the situation is different: the solution set is generically a one-dimensional self-motion manifold, so there is no finite set of "all 7R IK solutions." ssik parameterizes or samples that redundancy and enumerates the discrete algebraic branches associated with each sample. A result count of 128 therefore means, for example, 16 redundancy samples × 8 conditional branches — **not** that the arm has only 128 IK solutions. This distinction is intentional: **6R enumeration is over isolated solutions; 7R enumeration is conditional on a redundancy parameterization.**
+
+By default `solve()` runs **`respect_limits=True`**: out-of-URDF-limit branches are dropped (with a `q ± 2π` rescue pass first), then duplicates are merged. On 7R jointlock arms the limits filter runs *during* the lock-sweep, so `max_solutions=1` short-circuits on the first in-limits candidate. Pass `respect_limits=False` for the raw geometric set. Seed ranking, seed tolerances, and `max_solutions` then select among the recovered branches for trajectory continuation or control.
 
 The `allow_refinement=True` opt-in runs LM polish per algebraic candidate at a few hundred microseconds per branch, useful when an algebraic candidate lands just above `fk_atol` near a kinematic singularity.
 
@@ -599,26 +672,68 @@ sols = take_first(sols, k=4)                                 # top-k after ranki
 
 By default `solve()` already runs `wrap_to_limits` + `respect_limits` (and, when `q_seed`/`seed_tolerance`/`seed_metric` are passed, the seed filter + ranking); the standalone helpers exist for callers who want a different order, a different metric, or to add their own filters (collision-aware filtering, dexterity scoring) between the layers.
 
-### Native (C++) backend: `solve(native=True)`
+### Native (C++) backend — the default
 
-For the three-parallel 6R family (the UR sizes, CR5, Nova5, Z1, Standard Bots core/spark/thor), `solve()` accepts an opt-in `native=True` that runs a bundled C++ implementation of the full `solve()` contract — roughly **50× faster** on these arms:
+Every one of the 72 prebuilt arms runs a bundled C++ implementation of the full `solve()` contract **by default** — typically **2–100× faster** than the pure-Python path (median ~16×; see [`docs/native_benchmark.md`](docs/native_benchmark.md) for the full per-arm table). Nothing to opt into:
 
 ```python
-sols = ur5_ik.solve(T_target, native=True)                   # same API, native speed
-sols = ur5_ik.solve(T_target, native=True, q_seed=q_current, max_solutions=1)
+sols = ur5_ik.solve(T_target)                                # native by default
+sols = ur5_ik.solve(T_target, native=False)                  # identical algorithm, pure Python
 ```
 
-- **Same answers.** It reproduces the Python result's solution *set*. The *order* (without a seed) and the near-singular *representative* may differ (numpy vs Eigen); with a seed the nearest solution is stable.
-- **Silent fallback.** `native=True` is a hint: where the native extension isn't bundled (Windows wheels, source installs) or the arm's solver isn't native-capable, it transparently uses the Python path — it never fails for unavailability.
-- **Opt-in only.** The default (`native=False`) is unchanged. The native artifact is validated against the Python `solve()` as the oracle across the whole family and every option (limits / seed / max / tolerance).
+- **Same answers.** Native reproduces the Python result's solution *set*. Without a seed the *order* and the near-singular *representative* may differ (numpy vs Eigen), and redundant-7R arms may sample the self-motion manifold differently; with a seed the nearest solution is stable. Parity is gated in CI against the Python `solve()` across every arm and option (limits / seed / max / tolerance).
+- **Automatic fallback.** Where the native extension isn't bundled (Windows wheels, source installs), `solve()` transparently runs the identical pure-Python path — it never fails for unavailability. Pass `native=False` to force it explicitly (e.g. for bit-reproducible results across machines).
+- **Self-contained C++ artifacts.** The same solvers are emitted as zero-runtime-Python `cpp/gen/<arm>.hpp` headers for direct MoveIt/C++ use.
 
 Out of scope: collision filtering (use FCL or similar at the application layer) and continuous-trajectory smoothness (typically a separate planner concern).
 
+## Reliability and FK certification
+
+Every candidate an internal solver produces is checked against the original forward kinematics. For target `T` and candidate `q`, ssik evaluates `‖FK(q) − T‖` before exposing the solution to the caller — a common correctness check independent of how the candidate was generated. A candidate may originate from a geometric decomposition, Raghavan–Roth elimination, Husty–Pfurner elimination, a redundancy reduction, or numerical polishing; the final question is always the same: *does this configuration actually reproduce the requested pose?*
+
+This separates two properties that are often conflated:
+
+- **Soundness** — every returned configuration actually solves the requested IK problem to tolerance.
+- **Recovery / completeness** — the solver does not silently lose valid branches or fail on reachable configurations.
+
+FK closure directly checks soundness. Recovery requires stronger testing: independent cross-solver agreement, randomized reachable-pose sweeps, adversarial singularity probes, representation diversity, and branch-count checks. That is why ssik's tests emphasize reachable-pose recovery and worst-case behavior over average FK error or average runtime.
+
+### Conditioning-aware algebraic IK
+
+For general non-Pieper 6R arms, an exact algebraic derivation does not uniquely determine its numerical realization — equivalent elimination choices can yield polynomial-eigenvalue problems with radically different conditioning. ssik therefore treats *representation* as part of the solver. For algebraically equivalent representations `r1, r2, …`,
+
+```text
+exact_solution_set(r1) = exact_solution_set(r2)
+```
+
+does **not** imply
+
+```text
+numerical_recovery(r1) = numerical_recovery(r2).
+```
+
+AE-3 exploits this: it evaluates alternative Raghavan–Roth elimination variables and specializes the artifact to a better-conditioned choice (the JACO 2 `3.75e16 → 127` result above). This turns conditioning from a post-hoc debugging statistic into an input to solver construction. The same principle drives structural dispatch, alternative algebraic formulations, refinement, rescue, and FK certification — all serving one goal: **expand the part of the reachable workspace on which the solver reliably recovers valid IK.**
+
+Some configurations where a naive closed form quietly fails, and how ssik handles them:
+
+| Configuration | Failure mode | ssik |
+|---|---|---|
+| Rank-deficient RR ridge (reachable, measure-zero) | analytical path returns `[]` | reach-gated T-perturbation rescue |
+| 180° twist, α = π (JACO 2 joint 2) | `tan(α/2)→∞`, roots lost in float64 | chart cap + LM polish |
+| Symmetric-DH locked-7R | RR incomplete / long hang | Husty–Pfurner Study-quaternion dispatch |
+| Ill-conditioned 80×80 pencil | Eigen QZ non-converges (~38%) | monic-companion reduction |
+| Offset wrist (iiwa7, ±6 cm) | canonical path mislocates the wrist | route to the general path |
+| Anti-parallel joint trio (Standard Bots) | signed-sum collapse → FK-wrong | three-parallel sign guards |
+
 ## How it compares
 
-Numerical-IK libraries take a seed, run damped least-squares to a **single** converged configuration, and stop. ssik returns **every analytical branch**. Branch enumeration matters for motion planning (try every branch, pick the one with best clearance), for dexterity analysis (the manipulability ellipsoid is per-branch), and for trajectory continuation across kinematic singularities.
+There are three different questions an IK system can answer: (1) **can the kinematic equations be solved?** (2) **can a finite-precision implementation reliably recover the solution set?** (3) **how much computation does that recovery cost?** ssik is primarily concerned with the second.
 
-EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-decomposition solvers. It's analytical on the kinematic families it recognises and refuses everything else. The table below is **measured automatically** by [`scripts/regen_bench.py`](scripts/regen_bench.py) (both libraries over the same 200 random reachable poses per arm, Apple M3 single-thread, mean ± 95% CI via 1000-resample bootstrap) and stored in the manifest, so it refreshes when an arm is added, no hand-maintained numbers. FK residual is the Frobenius norm `‖FK(q) − T‖`. Each library is fed the same manufacturer fixture as-is (no manual joint-locking), so an arm whose URDF bundles gripper/extra joints can exceed EAIK's 6R limit.
+**Numerical IK** (MINK, TRAC-IK, KDL-LMA) solves a local optimization from a seed and returns one converged configuration — often exactly the right interface for servoing. ssik instead exposes multiple kinematically valid branches, separating *kinematic feasibility* from *which feasible configuration is best for the task* (a planner can enumerate branches and choose by clearance, limits, manipulability, or distance from the current pose).
+
+**EAIK** (Ostermeier 2024) automatically recognizes several geometric manipulator families and derives efficient subproblem-decomposition solvers for them; on those families it is extremely fast and accurate. The table below compares the current EAIK implementation on the supplied fixtures **as-is** against ssik. A `refuses` row means EAIK did not produce a valid solution for that fixture through this benchmark path — not a claim that the robot could never be handled via joint-locking or remodeling. On geometries EAIK recognizes, its specialized C++ is generally faster; ssik's emphasis is retaining enumerative IK as the geometry becomes less structurally convenient, always checking returned solutions against the original FK. The `ssik` column is `solve()` at its **default** (native), so it reflects what you actually get.
+
+The table is **measured automatically** by [`scripts/regen_bench.py`](scripts/regen_bench.py) (both libraries over the same 200 random reachable poses per arm, mean ± 95% CI via 1000-resample bootstrap) and stored in the manifest, so it refreshes when an arm is added — no hand-maintained numbers. FK residual is the Frobenius norm `‖FK(q) − T‖`. Each library is fed the same manufacturer fixture as-is (no manual joint-locking).
 
 <!-- AUTOGEN:readme_eaik_table -->
 <details>
@@ -626,17 +741,17 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| UR5 (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 2e-15 / 2-8 sols | 1.77 ± 0.13 ms / FK 6e-12 / 2-8 sols |
-| UR3e (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 1e-15 / 2-6 sols | 2.03 ± 0.11 ms / FK 1e-8 / 2-8 sols |
-| UR5e (Pieper 6R, three-parallel) | 4 ± 1 µs / FK 1e-15 / 4-8 sols | 1.85 ± 0.13 ms / FK 2e-9 / 2-8 sols |
-| UR10e (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 1e-15 / 2-8 sols | 1.74 ± 0.13 ms / FK 2e-9 / 2-8 sols |
-| UR16e (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 1e-15 / 4-8 sols | 1.89 ± 0.13 ms / FK 1e-8 / 2-8 sols |
-| UR20 (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 1e-15 / 4-8 sols | 1.80 ± 0.13 ms / FK 1e-8 / 2-8 sols |
-| UR30 (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 2e-15 / 2-8 sols | 1.93 ± 0.13 ms / FK 2e-9 / 2-8 sols |
-| UR7E (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 1e-15 / 4-8 sols | 2.53 ± 1.05 ms / FK 2e-9 / 2-8 sols |
-| UR12E (Pieper 6R, three-parallel) | 18 ± 5 µs / FK 1e-15 / 2-8 sols | 2.29 ± 0.32 ms / FK 2e-9 / 2-8 sols |
-| UR15 (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 1e-15 / 4-8 sols | 2.29 ± 0.18 ms / FK 2e-9 / 2-8 sols |
-| UR18 (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 1e-15 / 2-8 sols | 4.11 ± 1.04 ms / FK 2e-9 / 2-8 sols |
+| UR5 (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 2e-15 / 2-8 sols | 20 ± 0 µs / FK 1e-8 / 2-8 sols |
+| UR3e (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 1e-15 / 2-6 sols | 20 ± 0 µs / FK 1e-8 / 2-8 sols |
+| UR5e (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 1e-15 / 4-8 sols | 20 ± 0 µs / FK 1e-8 / 2-8 sols |
+| UR10e (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 1e-15 / 2-8 sols | 20 ± 0 µs / FK 1e-8 / 2-8 sols |
+| UR16e (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 1e-15 / 4-8 sols | 20 ± 0 µs / FK 1e-8 / 2-8 sols |
+| UR20 (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 1e-15 / 4-8 sols | 20 ± 0 µs / FK 1e-8 / 2-8 sols |
+| UR30 (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 2e-15 / 2-8 sols | 20 ± 0 µs / FK 1e-8 / 2-8 sols |
+| UR7E (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 1e-15 / 4-8 sols | 20 ± 0 µs / FK 1e-8 / 2-8 sols |
+| UR12E (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 1e-15 / 2-8 sols | 20 ± 0 µs / FK 1e-8 / 2-8 sols |
+| UR15 (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 1e-15 / 4-8 sols | 20 ± 0 µs / FK 8e-11 / 2-8 sols |
+| UR18 (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 1e-15 / 2-8 sols | 20 ± 0 µs / FK 1e-8 / 2-8 sols |
 
 </details>
 
@@ -645,7 +760,7 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| Puma 560 (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 8e-12 / 8 sols | 220 ± 0 µs / FK 8e-12 / 8 sols |
+| Puma 560 (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 8e-12 / 8 sols | 10 ± 0 µs / FK 9e-9 / 8 sols |
 
 </details>
 
@@ -654,11 +769,11 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| JACO 2 (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 870 ± 20 µs / FK 8e-7 / 2-12 sols |
-| Gen3 (**approximate-SRS 7R**, 12 mm offset) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 12.87 ± 0.27 ms / FK 1e-12 / 11-92 sols |
-| Gen3 Lite (**non-Pieper 6R**) | **refuses** ("Intersection point can't be calculated for two parallel axes") | 1.35 ± 0.08 ms / FK 1e-8 / 1-12 sols |
-| JACO j2s6s300 (Pieper 6R, spherical wrist) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 380 ± 10 µs / FK 4e-8 / 6-8 sols |
-| JACO j2s7s300 (**approximate-SRS 7R**, 1.6 mm offset) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 17.50 ± 0.98 ms / FK 1e-12 / 2-66 sols |
+| JACO 2 (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 350 ± 10 µs / FK 3e-9 / 2-12 sols |
+| Gen3 (**approximate-SRS 7R**, 12 mm offset) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 2.26 ± 1.15 ms / FK 1e-12 / 14-95 sols |
+| Gen3 Lite (**non-Pieper 6R**) | **refuses** ("Intersection point can't be calculated for two parallel axes") | 350 ± 10 µs / FK 7e-9 / 1-12 sols |
+| JACO j2s6s300 (Pieper 6R, spherical wrist) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 10 ± 0 µs / FK 6e-8 / 6-8 sols |
+| JACO j2s7s300 (**approximate-SRS 7R**, 1.6 mm offset) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 2.68 ± 0.16 ms / FK 1e-12 / 18-80 sols |
 
 </details>
 
@@ -667,10 +782,10 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| iiwa14 (SRS 7R) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 4.84 ± 0.02 ms / FK 1e-13 / 128 sols |
-| iiwa7 (SRS 7R, offset wrist) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 5.83 ± 0.59 ms / FK 5e-14 / 128 sols |
-| KR 6 R900 (Pieper 6R, spherical wrist) | 3 ± 0 µs / FK 9e-12 / 4 sols | 210 ± 0 µs / FK 4e-12 / 4 sols |
-| KR 210 R2700 (Pieper 6R, spherical wrist) | 3 ± 0 µs / FK 1e-15 / 4 sols | 330 ± 0 µs / FK 9e-8 / 4 sols |
+| iiwa14 (SRS 7R) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 210 ± 0 µs / FK 4e-14 / 128 sols |
+| iiwa7 (SRS 7R, offset wrist) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 200 ± 0 µs / FK 2e-13 / 128 sols |
+| KR 6 R900 (Pieper 6R, spherical wrist) | 4 ± 1 µs / FK 9e-12 / 4 sols | 20 ± 10 µs / FK 9e-9 / 4 sols |
+| KR 210 R2700 (Pieper 6R, spherical wrist) | 8 ± 5 µs / FK 1e-15 / 4 sols | 20 ± 0 µs / FK 4e-9 / 4 sols |
 
 </details>
 
@@ -679,8 +794,8 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| Franka Panda (**spherical-shoulder 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 3.00 ± 0.11 ms / FK 1e-11 / 32-132 sols |
-| FR3 (**spherical-shoulder 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 2.83 ± 0.08 ms / FK 1e-11 / 32-132 sols |
+| Franka Panda (**spherical-shoulder 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 130 ± 0 µs / FK 6e-12 / 32-132 sols |
+| FR3 (**spherical-shoulder 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 120 ± 0 µs / FK 6e-12 / 32-132 sols |
 
 </details>
 
@@ -689,8 +804,8 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| xArm7 (**approx spherical-shoulder 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 6.87 ± 0.15 ms / FK 1e-10 / 53-96 sols |
-| xArm6 (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 1.04 ± 0.02 ms / FK 3e-6 / 8-16 sols |
+| xArm7 (**approx spherical-shoulder 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 360 ± 10 µs / FK 1e-10 / 82-108 sols |
+| xArm6 (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 450 ± 10 µs / FK 4e-9 / 8-16 sols |
 
 </details>
 
@@ -699,7 +814,7 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| Z1 (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 2e-15 / 4-8 sols | 1.52 ± 0.11 ms / FK 3e-15 / 4-8 sols |
+| Z1 (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 2e-15 / 4-8 sols | 20 ± 0 µs / FK 5e-15 / 4-8 sols |
 
 </details>
 
@@ -708,7 +823,7 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| PiPER (**non-Pieper 6R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 2.01 ± 1.01 ms / FK 1e-5 / 2-8 sols |
+| PiPER (**non-Pieper 6R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 410 ± 10 µs / FK 5e-6 / 1-10 sols |
 
 </details>
 
@@ -717,8 +832,8 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| Rizon 4 (**non-SRS 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 16.55 ± 0.55 ms / FK 3e-7 / 4-60 sols |
-| Rizon 10 (**non-SRS 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 15.13 ± 0.20 ms / FK 6e-8 / 6-64 sols |
+| Rizon 4 (**non-SRS 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 1.72 ± 0.22 ms / FK 3e-10 / 4-60 sols |
+| Rizon 10 (**non-SRS 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 1.10 ± 0.02 ms / FK 2e-9 / 6-64 sols |
 
 </details>
 
@@ -727,7 +842,7 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| Kassow KR810 (**non-SRS 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 16.52 ± 0.23 ms / FK 5e-8 / 4-42 sols |
+| Kassow KR810 (**non-SRS 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 12.02 ± 1.31 ms / FK 1e-7 / 5-49 sols |
 
 </details>
 
@@ -736,16 +851,16 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| CRX-3iA (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 670 ± 10 µs / FK 1e-7 / 8-12 sols |
-| CRX-5iA (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 830 ± 100 µs / FK 3e-7 / 8-12 sols |
-| CRX-10iA (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 910 ± 60 µs / FK 8e-6 / 7-12 sols |
-| CRX-10iA/LP (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 1.01 ± 0.08 ms / FK 4e-6 / 4-12 sols |
-| CRX-20iA/L (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 710 ± 20 µs / FK 9e-7 / 4-12 sols |
-| CRX-30iA (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 1.07 ± 0.11 ms / FK 5e-6 / 4-12 sols |
-| CRX-10iA/L (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 960 ± 10 µs / FK 2e-6 / 4-12 sols |
-| M-710iC (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 8e-12 / 4-8 sols | 220 ± 0 µs / FK 8e-12 / 4-8 sols |
-| LR Mate 200iD (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 4e-12 / 8 sols | 410 ± 60 µs / FK 3e-12 / 8 sols |
-| R-2000iC/210L (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 8e-12 / 4-8 sols | 220 ± 0 µs / FK 8e-12 / 4-8 sols |
+| CRX-3iA (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 370 ± 0 µs / FK 2e-9 / 8-12 sols |
+| CRX-5iA (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 380 ± 0 µs / FK 4e-8 / 8-12 sols |
+| CRX-10iA (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 370 ± 0 µs / FK 2e-9 / 8-12 sols |
+| CRX-10iA/LP (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 380 ± 0 µs / FK 1e-9 / 4-12 sols |
+| CRX-20iA/L (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 370 ± 0 µs / FK 1e-9 / 4-12 sols |
+| CRX-30iA (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 380 ± 0 µs / FK 4e-7 / 8-12 sols |
+| CRX-10iA/L (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 380 ± 0 µs / FK 3e-9 / 4-12 sols |
+| M-710iC (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 8e-12 / 4-8 sols | 10 ± 0 µs / FK 9e-9 / 4-8 sols |
+| LR Mate 200iD (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 4e-12 / 8 sols | 10 ± 0 µs / FK 3e-9 / 8 sols |
+| R-2000iC/210L (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 8e-12 / 4-8 sols | 10 ± 0 µs / FK 3e-9 / 4-8 sols |
 
 </details>
 
@@ -754,8 +869,8 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| YAM (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 1.02 ± 0.01 ms / FK 3e-7 / 5-8 sols |
-| big_yam (**non-Pieper 6R**) | **refuses** ("Intersection point can't be calculated for two parallel axes") | 1.01 ± 0.01 ms / FK 7e-7 / 8 sols |
+| YAM (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 460 ± 30 µs / FK 8e-7 / 8 sols |
+| big_yam (**non-Pieper 6R**) | **refuses** ("Intersection point can't be calculated for two parallel axes") | 400 ± 0 µs / FK 2e-8 / 8 sols |
 
 </details>
 
@@ -764,8 +879,8 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| OpenArm L (SRS 7R) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 4.54 ± 0.29 ms / FK 3e-14 / 128 sols |
-| OpenArm R (SRS 7R) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 4.25 ± 0.04 ms / FK 4e-15 / 128 sols |
+| OpenArm L (SRS 7R) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 190 ± 0 µs / FK 3e-14 / 128 sols |
+| OpenArm R (SRS 7R) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 190 ± 0 µs / FK 3e-15 / 128 sols |
 
 </details>
 
@@ -774,8 +889,8 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| R1 Pro L (SRS 7R) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 4.39 ± 0.29 ms / FK 3e-15 / 128 sols |
-| R1 Pro R (SRS 7R) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 4.36 ± 0.21 ms / FK 3e-15 / 128 sols |
+| R1 Pro L (SRS 7R) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 190 ± 0 µs / FK 4e-15 / 128 sols |
+| R1 Pro R (SRS 7R) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 190 ± 0 µs / FK 4e-15 / 128 sols |
 
 </details>
 
@@ -784,9 +899,9 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| Thor (Pieper 6R, three-parallel) | **refuses** ("classifies as 6R-THREE_INNER_PARALLEL but returns FK-incorrect solutions (max FK 3e+00)") | 2.44 ± 0.06 ms / FK 4e-12 / 1-4 sols |
-| Core (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 9e-16 / 2-6 sols | 2.47 ± 0.06 ms / FK 2e-12 / 1-4 sols |
-| Spark (Pieper 6R, three-parallel) | **refuses** ("classifies as 6R-THREE_INNER_PARALLEL but returns FK-incorrect solutions (max FK 3e+00)") | 2.46 ± 0.06 ms / FK 9e-13 / 1-4 sols |
+| Thor (Pieper 6R, three-parallel) | **refuses** ("classifies as 6R-THREE_INNER_PARALLEL but returns FK-incorrect solutions (max FK 3e+00)") | 10 ± 0 µs / FK 8e-9 / 1-4 sols |
+| Core (Pieper 6R, three-parallel) | 4 ± 0 µs / FK 9e-16 / 2-6 sols | 10 ± 0 µs / FK 1e-8 / 1-4 sols |
+| Spark (Pieper 6R, three-parallel) | **refuses** ("classifies as 6R-THREE_INNER_PARALLEL but returns FK-incorrect solutions (max FK 3e+00)") | 10 ± 0 µs / FK 8e-8 / 1-4 sols |
 
 </details>
 
@@ -795,11 +910,11 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| YuMi L (**approximate-SRS 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 20.35 ± 1.75 ms / FK 1e-12 / 26-70 sols |
-| YuMi R (**approximate-SRS 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 19.43 ± 1.38 ms / FK 1e-12 / 24-79 sols |
-| IRB 120 (Pieper 6R, spherical wrist) | 4 ± 1 µs / FK 3e-12 / 8 sols | 240 ± 10 µs / FK 4e-12 / 8 sols |
-| IRB 1600 (Pieper 6R, spherical wrist) | 3 ± 0 µs / FK 5e-12 / 4-8 sols | 210 ± 0 µs / FK 4e-12 / 4-8 sols |
-| IRB 6700 (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 8e-12 / 4-8 sols | 210 ± 0 µs / FK 3e-12 / 4-8 sols |
+| YuMi L (**approximate-SRS 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 2.66 ± 0.19 ms / FK 1e-12 / 42-89 sols |
+| YuMi R (**approximate-SRS 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 2.56 ± 0.09 ms / FK 1e-12 / 39-94 sols |
+| IRB 120 (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 3e-12 / 8 sols | 10 ± 0 µs / FK 9e-9 / 8 sols |
+| IRB 1600 (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 5e-12 / 4-8 sols | 10 ± 0 µs / FK 3e-9 / 4-8 sols |
+| IRB 6700 (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 8e-12 / 4-8 sols | 10 ± 0 µs / FK 3e-9 / 4-8 sols |
 
 </details>
 
@@ -808,8 +923,8 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| GP8 (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 8e-12 / 8 sols | 300 ± 30 µs / FK 2e-12 / 8 sols |
-| HC10 (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 1.91 ± 0.94 ms / FK 6e-6 / 4-16 sols |
+| GP8 (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 8e-12 / 8 sols | 10 ± 0 µs / FK 9e-9 / 8 sols |
+| HC10 (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 410 ± 10 µs / FK 2e-8 / 4-16 sols |
 
 </details>
 
@@ -818,7 +933,7 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| RS007N (Pieper 6R, spherical wrist) | 5 ± 1 µs / FK 4e-12 / 8 sols | 240 ± 0 µs / FK 8e-12 / 4-8 sols |
+| RS007N (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 4e-12 / 8 sols | 10 ± 0 µs / FK 3e-9 / 4-8 sols |
 
 </details>
 
@@ -827,7 +942,7 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| RX160 (Pieper 6R, spherical wrist) | 4 ± 1 µs / FK 8e-12 / 4-8 sols | 230 ± 10 µs / FK 8e-12 / 2-8 sols |
+| RX160 (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 8e-12 / 4-8 sols | 20 ± 0 µs / FK 9e-9 / 2-8 sols |
 
 </details>
 
@@ -836,8 +951,8 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| RM75 (**approximate-SRS 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 10.03 ± 0.71 ms / FK 1e-12 / 128 sols |
-| GEN72 (**approximately-spherical-shoulder 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 4.36 ± 0.09 ms / FK 1e-10 / 34-40 sols |
+| RM75 (**approximate-SRS 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 600 ± 10 µs / FK 1e-12 / 128 sols |
+| GEN72 (**approximately-spherical-shoulder 7R**) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 300 ± 0 µs / FK 1e-10 / 50-72 sols |
 
 </details>
 
@@ -846,8 +961,8 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| CR5 (three-parallel 6R) | 5 ± 1 µs / FK 2e-15 / 2-4 sols | 2.91 ± 0.11 ms / FK 8e-11 / 1-4 sols |
-| Nova5 (three-parallel 6R) | 4 ± 1 µs / FK 1e-15 / 2-4 sols | 4.26 ± 0.92 ms / FK 4e-11 / 1-4 sols |
+| CR5 (three-parallel 6R) | 4 ± 0 µs / FK 2e-15 / 2-4 sols | 10 ± 0 µs / FK 3e-11 / 1-4 sols |
+| Nova5 (three-parallel 6R) | 4 ± 0 µs / FK 1e-15 / 2-4 sols | 10 ± 0 µs / FK 7e-8 / 1-4 sols |
 
 </details>
 
@@ -856,7 +971,7 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| RV-4FR (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 8e-12 / 8 sols | 240 ± 10 µs / FK 8e-12 / 8 sols |
+| RV-4FR (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 8e-12 / 8 sols | 10 ± 0 µs / FK 9e-9 / 8 sols |
 
 </details>
 
@@ -865,7 +980,7 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| HH020 (Pieper 6R, spherical wrist) | 5 ± 2 µs / FK 2e-14 / 4-8 sols | 610 ± 70 µs / FK 2e-7 / 4-8 sols |
+| HH020 (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 2e-14 / 4-8 sols | 10 ± 0 µs / FK 9e-8 / 4-8 sols |
 
 </details>
 
@@ -874,7 +989,7 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| VS-060 (Pieper 6R, spherical wrist) | 5 ± 1 µs / FK 8e-12 / 8 sols | 230 ± 10 µs / FK 8e-12 / 4-8 sols |
+| VS-060 (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 8e-12 / 8 sols | 10 ± 0 µs / FK 3e-9 / 4-8 sols |
 
 </details>
 
@@ -883,8 +998,8 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| M1013 (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 1.35 ± 0.12 ms / FK 8e-6 / 2-8 sols |
-| M0609 (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 1.78 ± 0.62 ms / FK 1e-5 / 2-8 sols |
+| M1013 (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 410 ± 10 µs / FK 8e-6 / 2-9 sols |
+| M0609 (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 500 ± 90 µs / FK 1e-5 / 2-9 sols |
 
 </details>
 
@@ -893,9 +1008,9 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| xMate Pro7 (SRS 7R) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 6.70 ± 0.91 ms / FK 1e-12 / 128 sols |
-| xMate CR7 (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 1.03 ± 0.03 ms / FK 2e-8 / 4-12 sols |
-| xMate SR3 (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 880 ± 60 µs / FK 6e-9 / 2-12 sols |
+| xMate Pro7 (SRS 7R) | **refuses** ("Currently, only 1-6R robots are solvable with EAIK") | 230 ± 10 µs / FK 1e-12 / 128 sols |
+| xMate CR7 (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 400 ± 10 µs / FK 8e-9 / 4-12 sols |
+| xMate SR3 (**non-Pieper 6R**) | **refuses** ("6R-Unknown Kinematic Class") | 340 ± 10 µs / FK 2e-9 / 2-12 sols |
 
 </details>
 
@@ -904,25 +1019,45 @@ EAIK (Ostermeier 2024) is the canonical Python wrapper around C++ subproblem-dec
 
 | Arm (class) | EAIK | ssik |
 |---|---|---|
-| ViperX 300s (Pieper 6R, spherical wrist) | 5 ± 1 µs / FK 9e-16 / 8 sols | 310 ± 20 µs / FK 3e-12 / 8 sols |
-| WidowX 250s (Pieper 6R, spherical wrist) | 6 ± 2 µs / FK 1e-15 / 8 sols | 530 ± 70 µs / FK 8e-12 / 8 sols |
+| ViperX 300s (Pieper 6R, spherical wrist) | 3 ± 0 µs / FK 9e-16 / 8 sols | 10 ± 0 µs / FK 3e-9 / 8 sols |
+| WidowX 250s (Pieper 6R, spherical wrist) | 4 ± 0 µs / FK 1e-15 / 8 sols | 10 ± 0 µs / FK 9e-9 / 8 sols |
 
 </details>
 <!-- /AUTOGEN -->
 
-The **sols** column is the range of branch counts across the reachable poses: constant for Pieper-class arms (Puma → 8), variable for non-Pieper 6R (spurious roots of the degree-8 Sylvester resultant fall complex at some poses), and the discretised redundancy-manifold sample × algebraic-branch product for 7R (iiwa14: 16-sample swivel × 8 = 128).
+The **sols** column is the branch-count range across reachable poses: constant for Pieper-class 6R (Puma → 8), variable for non-Pieper 6R (spurious roots of the degree-8 Sylvester resultant fall complex at some poses), and the redundancy-sample × algebraic-branch product for 7R (iiwa14: 16 swivel samples × 8 = 128).
 
-EAIK is ~100× faster on Pieper-class 6R, its native sweet spot, which ssik doesn't try to compete on. The point is the **refuses** rows: non-Pieper 6R (JACO 2, xArm6, PiPER) and every 7R arm, the geometries ssik exists for. Refusal strings are EAIK's own errors, captured verbatim from its loader. A numerical-IK comparison (MINK) is tracked in [#236](https://github.com/personalrobotics/ssik/issues/236).
+The tradeoff is not "ssik is always faster." It is:
+
+```text
+more exploitable geometric structure  →  simpler, faster solver
+less exploitable geometric structure  →  more general algebraic machinery,
+                                          higher cost, enumerative semantics kept
+```
+
+### What the benchmark should be read as
+
+Mean runtime alone does not characterize an IK solver. For reachable targets generated as `q ~ joint distribution; T = FK(q)`, the target is *known* to have a solution — so a solver that returns nothing there has suffered a **recovery failure**, regardless of whether an exact derivation exists. A solver that is very fast on 99% of the workspace but develops numerical holes in the remaining 1% can be less useful than a slower one with predictable recovery. ssik's evaluation therefore emphasizes reachable-pose recovery rate, branch recovery for nonredundant arms, worst-case and tail FK residual, behavior near singularities, median and tail latency, and cross-solver agreement — not average runtime alone. (Refusal strings are EAIK's own, captured verbatim; a numerical-IK comparison against MINK is tracked in [#236](https://github.com/personalrobotics/ssik/issues/236).)
 
 ## Under the hood
 
-The algorithmic ingredients are not novel: Raghavan–Roth (1990), Manocha–Canny (1994), Singh–Kreutz (1989), Husty–Pfurner (2007). What's new is making the textbook pipelines survive on real ill-conditioned arms (AE-3 leftvar selection on JACO 2 drops `cond(m_quad)` from 3.75 × 10^16 to 127), composing them with a uniform dispatch layer, and packaging the whole thing as a deployable artifact.
+The mathematical ingredients have a long lineage: geometric subproblem decomposition, Raghavan–Roth and Manocha–Canny general-6R elimination, Singh–Kreutz redundancy parameterization, and Husty–Pfurner general 6R kinematics. ssik does not claim these classical derivations as new.
 
-Cython hot loops cover the leaf primitives (POE forward kinematics, the Levenberg–Marquardt polish and analytical Jacobian); the rest is pure Python so it stays inspectable.
+The implementation problem is that **algebraic solvability does not guarantee numerical recoverability**. A textbook derivation must still make choices about representation, elimination order, linearization, tolerances, singular cases, reconstruction, and floating-point recovery — and those choices decide whether solutions that exist in exact arithmetic are actually returned by a deployed solver. ssik organizes them into a common hierarchy:
+
+1. normalize the robot into a common kinematic representation;
+2. identify structural conditions that permit simpler geometric solvers;
+3. fall back to general algebraic IK when special geometry is absent;
+4. choose among algebraically equivalent formulations for numerical conditioning;
+5. reconstruct and independently validate candidate joint configurations;
+6. refine or retry numerically difficult candidates when appropriate;
+7. apply application-level constraints such as joint limits and seed continuity.
+
+The JACO 2 conditioning result shows why: two exact formulations of the same IK equations can differ from `cond ≈ 3.75e16` to `cond ≈ 127`. The equations are equally solvable; the resulting numerical solvers are not equally reliable. Cython hot loops cover the leaf primitives on the pure-Python path (POE forward kinematics, LM polish, analytical Jacobian); the native C++ backend covers the full solve.
 
 ### How a solver is picked
 
-`dispatch()` classifies the POE-normalized chain by kinematic topology and returns the fastest solver whose structural predicate matches: closed-form specialisations first, the numeric Raghavan–Roth path last. Predicates are tried top to bottom and the first match wins; the same classifier runs whether you load a URDF with `Manipulator.from_urdf` or bake an artifact with `ssik build`.
+`dispatch()` searches from specialized to general representations: a solver is eligible only when its structural assumptions hold, and among eligible solvers ssik prefers the one that avoids unnecessary algebraic complexity. When no convenient Pieper-style geometry exists, dispatch falls through to general algebraic machinery rather than interpreting the geometry as analytically unsolvable. The same classifier runs whether you load a URDF with `Manipulator.from_urdf` or bake an artifact with `ssik build`.
 
 ```mermaid
 flowchart TD
@@ -973,7 +1108,15 @@ The tree folds a few details for readability:
 - **Tier-1 search solvers.** `two_parallel` / `two_intersecting` are importable but never auto-dispatched: Raghavan–Roth handles the same chains 50–200× faster.
 - **When `lm_refine` runs.** `_polished` solvers (and the T-perturbation rescue) run it unconditionally as part of their algorithm; every other solver runs it only under `allow_refinement=True`, and only on candidates that miss the FK tolerance.
 
-**Bulletproof testing**: every solver lands with N-way cross-solver agreement on shared fixtures, FK closure ≤ 1e-10 on every retained IK, 500+ Hypothesis-fuzzed random poses per fixture, and an explicit speed bench that has to clear a regression gate. The current suite has **1300+ tests across 11 fixture arms**. Negative-result spikes (a Cython estimate that misses by 2-5×, a codegen-bake on a part that's 0.3% of runtime) are published as closed issues with profile data so the next contributor doesn't repeat the path.
+### Testing the distinction between solvability and recovery
+
+A solver can be mathematically general and still fail numerically, so the test suite asks a stronger question than whether each algorithm implements its derivation. For reachable poses, ssik checks that solutions are actually *recovered*; for returned candidates, it checks independent FK closure (≤ 1e-10 on retained IK). On shared geometries it uses N-way cross-solver agreement, while adversarial and randomized tests (500+ Hypothesis-fuzzed poses per fixture) probe conditioning, singularities, reconstruction, joint limits, and branch loss, and an explicit speed bench must clear a regression gate.
+
+The discipline follows one invariant:
+
+> **No silent wrong answers.**
+
+A failure to recover a reachable pose, the loss of a valid branch, or an FK-inconsistent candidate is treated as a solver failure — never hidden behind an average-error metric. Negative-result investigations (a Cython estimate that missed by 2–5×, a codegen-bake on a part that was 0.3% of runtime) are published as closed issues with profile data so the next contributor doesn't repeat the path.
 
 ## Documentation
 
@@ -989,14 +1132,16 @@ Full docs site: **<https://personalrobotics.github.io/ssik/>**
 
 ## Related libraries
 
-ssik does not compete with these on the arms they cover. Pick the right tool for your geometry.
+ssik sits within a long line of analytical, algebraic, geometric, and numerical IK systems. These packages make different tradeoffs; the distinctions below are about solver semantics and current implementations, not a claim that one method dominates.
 
-- [**EAIK**](https://github.com/OstermD/EAIK) (Ostermeier 2024): Python wrapper around C++ subproblem-decomposition solvers. Analytical, returns all branches on Pieper-class 6R and canonical SRS 7R (with a manual joint lock). Refuses arms outside its recognised kinematic families. Directly benchmarked in the table above.
-- [**IK-Geo**](https://github.com/rpiRobotics/ik-geo) (Elias–Wen 2022/2025): the reference C++/Rust implementation of subproblem decomposition. Same coverage profile as EAIK. Has Python bindings (`ik-geo` on PyPI); currently pins `pyo3==0.20.3` so the wheel is incompatible with Python 3.13. Track upstream for an update.
-- [**IKFast**](http://openrave.org/docs/latest_stable/openravepy/ikfast/) (Diankov 2010, part of OpenRAVE): the original analytical-IK codegen tool. Symbolic preprocessing in sympy → per-arm C++. Works well on the kinematic families it was tuned for (Pieper-class 6R, spherical-wrist 7R via joint lock); the symbolic pipeline fails on modern sympy for non-Pieper geometries (`mpmath.polyroots` NoConvergence, `Matrix.inv` / `Matrix.det` stalls). LGPL-licensed.
-- [**MINK**](https://github.com/kevinzakka/mink) (Zakka): Mujoco-native numerical IK via damped least-squares. Iterative, takes a seed, converges to a single configuration. Handles any kinematic geometry but returns one IK, not all branches, and FK closure is proportional to the convergence tolerance (typically 1e-3 to 1e-6 rather than machine precision).
-- [**TracIK**](https://traclabs.com/projects/trac-ik/) (Beeson & Ames 2015): combined SQP / pseudoinverse Jacobian solver; the ROS Industrial default numerical IK. URDF-native. Same one-branch-per-seed semantics as MINK. The maintained Python binding (`pytracik`) ships a broken arm64 wheel; the ROS-native binding works fine inside ROS.
-- [**KDL-LMA**](https://github.com/orocos/orocos_kinematics_dynamics): OROCOS KDL's Levenberg-Marquardt numerical IK. Older and less robust than TracIK or MINK on the same problem class.
+- [**IK-Geo**](https://github.com/rpiRobotics/ik-geo) (Elias–Wen 2022/2025): a unified geometric-subproblem formulation for revolute IK. It covers any 6R manipulator in principle — robots with enough intersecting/parallel-axis structure get closed forms, less-structured commercial arms use 1D search, fully general 6R uses 2D search (the search forms can also be polynomialized). ssik shares IK-Geo's aggressive geometry exploitation, but uses general finite algebraic elimination as a first-class fallback. The `ik-geo` PyPI wheel currently pins `pyo3==0.20.3` (incompatible with Python 3.13).
+- [**EAIK**](https://github.com/OstermD/EAIK) (Ostermeier, Külz, Althoff): automatically recognizes supported kinematic structure and builds analytical IK via subproblem decomposition. Its current implementation covers a set of nonredundant families and handles redundant chains by locking a joint when the resulting subchain is supported. Directly benchmarked above on the supplied fixtures.
+- [**IKFast**](http://openrave.org/docs/latest_stable/openravepy/ikfast/) (Diankov/OpenRAVE): the influential analytical-IK codegen system that established the offline-symbolic → deployed-numerical-artifact pattern ssik also follows. Works well on the families it was tuned for (Pieper-class 6R, spherical-wrist 7R via joint lock); its sympy pipeline fails on modern sympy for non-Pieper geometries (`mpmath.polyroots` NoConvergence, `Matrix.inv`/`det` stalls). LGPL.
+- **Raghavan–Roth / Manocha–Canny / Husty–Pfurner**: classical general-6R algebraic methods establishing that a lack of Pieper structure does not imply a lack of a finite IK method. These are part of ssik's foundation; ssik's concern is their reliable finite-precision realization on contemporary geometries.
+- [**MINK**](https://github.com/kevinzakka/mink) (Zakka): MuJoCo-native optimization-based numerical IK. Takes a seed, searches locally to a single configuration — applicable to any geometry and natural for control, but different semantics from enumeration. FK closure tracks the convergence tolerance (typically 1e-3–1e-6).
+- [**TRAC-IK**](https://traclabs.com/projects/trac-ik/) and [**KDL**](https://github.com/orocos/orocos_kinematics_dynamics): mature numerical IK centered on seeded, one-branch-per-solve solution finding — the right interface when one nearby solution is what you want. (`pytracik`'s arm64 wheel is currently broken; the ROS-native binding works.)
+
+The relevant tradeoff is therefore not simply analytical versus numerical. It is among **structural specialization, generality, solution-set semantics, numerical reliability, and computational cost**.
 
 ## License
 
@@ -1009,7 +1154,7 @@ If you use ssik in academic work, please cite it. Machine-readable metadata is i
 ```bibtex
 @software{ssik,
   author    = {Srinivasa, Siddhartha},
-  title     = {ssik: analytical inverse kinematics for 6R and 7R revolute arms},
+  title     = {ssik: reliable enumerative inverse kinematics for 6R and 7R revolute arms},
   url       = {https://github.com/personalrobotics/ssik},
   doi       = {10.5281/zenodo.20278005},
   year      = {2026},
