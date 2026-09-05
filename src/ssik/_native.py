@@ -60,6 +60,15 @@ def native_available() -> bool:
     return _load_ext() is not None
 
 
+def _validate_seed_metric(seed_metric: str, q_seed: NDArray[np.float64] | None) -> None:
+    """Reject an unknown seed_metric the same way the Python path does (via
+    ``ssik.postprocess.nearest_to_seed``), so the contract is identical whether the
+    native backend runs or falls back. Only meaningful with a seed (matches Python,
+    which reaches the metric only when ranking against ``q_seed``)."""
+    if q_seed is not None and seed_metric not in ("wrap_l2", "wrap_linf"):
+        raise ValueError(f"unknown metric {seed_metric!r}; expected 'wrap_l2' or 'wrap_linf'")
+
+
 # Marshalled per-KinBody constants, cached: each artifact has one long-lived _KB,
 # so keying on id(kb) is stable and avoids re-marshalling on every solve (which
 # would erode the native speedup).
@@ -122,6 +131,7 @@ def try_native_solve(
     """
     if solver_name not in _NATIVE_SOLVERS:
         return None
+    _validate_seed_metric(seed_metric, q_seed)
     ext = _load_ext()
     if ext is None:
         return None
@@ -808,6 +818,7 @@ def try_native_jointlock_solve(
     Redundant 7R sampling solver -> relative-completeness contract."""
     if solver_name != "jointlock.seven_r" or jointlock_geometry is None:
         return None
+    _validate_seed_metric(seed_metric, q_seed)
     ext = _load_ext()
     if ext is None:
         return None
@@ -1092,6 +1103,7 @@ def try_native_solve_7r(
     returns ``None`` to fall back to Python: SRS + srs_polished ->
     :func:`try_native_srs_solve`; spherical_shoulder{,_polished} ->
     :func:`try_native_spherical_shoulder_solve`."""
+    _validate_seed_metric(kwargs.get("seed_metric", "wrap_linf"), kwargs.get("q_seed"))
     if solver_name in ("seven_r.srs", "seven_r.srs_polished"):
         return try_native_srs_solve(solver_name, kb, t_target, **kwargs)
     if solver_name in ("seven_r.spherical_shoulder", "seven_r.spherical_shoulder_polished"):

@@ -46,6 +46,12 @@ def build(out_dir: Path) -> Path:
     cmd = [
         (sys.platform == "darwin" and "clang++") or "c++",
         "-O2",
+        # Release build: disable assert()/eigen_assert. The solvers deliberately
+        # feed Eigen degenerate matrices (rescue jitters, near-singular poses) and
+        # rely on FK-certification to reject the resulting garbage, so an active
+        # eigen_assert would abort() the process on exactly the poses the algorithm
+        # is designed to survive. Standard for a shipped extension.
+        "-DNDEBUG",
         "-std=c++20",
         "-shared",
         "-fPIC",
